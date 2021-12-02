@@ -38,7 +38,6 @@ local function getDPI() -- since the dpi control returns a string with a % sign 
     local dpi = ui.get(dpiControl):gsub('[%c%p%s]', '');
 
     if (pcall(function() tonumber(dpi) end)) then
-        print("2")
         return tonumber(dpi) / 100;
     else
         return 1;
