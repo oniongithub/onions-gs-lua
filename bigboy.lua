@@ -37,7 +37,8 @@ local dpiControl = ui.reference("Misc", "Settings", "DPI scale");
 local function getDPI() -- since the dpi control returns a string with a % sign do some magical wizardry to remove it
     local dpi = ui.get(dpiControl):gsub('[%c%p%s]', '');
 
-    if (type(dpi) == "number") then
+    if (pcall(function() tonumber(dpi) end)) then
+        print("2")
         return tonumber(dpi) / 100;
     else
         return 1;
@@ -78,6 +79,20 @@ local function traceCrosshair() -- trace to the end of your crosshair using eye 
     crosshairLocation = vector(eye.x + cam.x * (traceDist * percent), eye.y + cam.y * (traceDist * percent), eye.z + cam.z * (traceDist * percent));
 
     return percent, hitEnt, crosshairLocation;
+end
+
+function math.clamp(number, min, max)
+    if (number >= max) then
+        return max;
+    elseif (number <= min) then
+        return min;
+    else
+        return number;
+    end
+end
+
+local function numberToNumber(num1, num2, percent)
+    return math.clamp(num1 + (num2 - num1) * percent, 0, 255);
 end
 
 --[[
@@ -476,14 +491,12 @@ end
 --]]
 
 local disabledReferences = {
-    { name = "Player Glow", reference = ui.reference("Visuals", "Player ESP", "Glow"), disabled = true, canGet = true },
-    { name = "Grenade Glow", reference = ui.reference("Visuals", "Other ESP", "Grenades"), disabled = true, canGet = true },
     { name = "Damage Logging", reference = ui.reference("Misc", "Miscellaneous", "Log damage dealt"), disabled = true, canGet = true },
     { name = "Blockbot", reference = ui.reference("Misc", "Movement", "Blockbot"), disabled = false, canGet = true },
     { name = "Username Stealer", reference = ui.reference("Misc", "Miscellaneous", "Steal player name"), disabled = false, canGet = false },
 };
 
-if (disabledReferences ~= nil and #disabledReferences > 0) then -- Sets all the references above to be invisible due to being recoded or they cause crashing
+if (disabledReferences ~= nil and #disabledReferences > 0) then -- Sets all the references above to be invisible due to being remade
     client.exec("clear");
     for i = 1, #disabledReferences do
         if (disabledReferences[i].canGet and type(ui.get(disabledReferences[i].reference)) == "boolean") then
@@ -500,6 +513,44 @@ if (disabledReferences ~= nil and #disabledReferences > 0) then -- Sets all the 
     end
 
     notification("UI has been initialized.", 2500, {menuR, menuG, menuB, menuA}, 4, 1):run();
+end
+
+--[[
+    Christmas Mode
+--]]
+
+function client.UnixTime()
+    local a, b, c, d = client.system_time();
+    local unix = client.unix_time();
+
+    return unix * 1000 + d;
+end
+
+local onionChristmasMode = ui.new_checkbox("Misc", "Settings", "Christmas mode");
+local onionChristmasTime = client.UnixTime(); local onionChristmasSwitch = false;
+local onionChristmasGlobalColor = {255, 255, 255, 255};
+
+local christmasColors = {
+    {49, 235, 55, 255},
+    {245, 64, 82, 255},
+}
+
+local function runRainbow()
+    if (ui.get(onionChristmasMode)) then
+        local christmasPercent = (client.UnixTime() - onionChristmasTime) / 2500;
+        local newPercent = easingWidth(3, 1, christmasPercent);
+
+        if (onionChristmasSwitch) then
+            onionChristmasGlobalColor = {numberToNumber(49, 245, newPercent), numberToNumber(235, 64, newPercent), numberToNumber(55, 82, newPercent), 255};
+        else
+            onionChristmasGlobalColor = {numberToNumber(245, 49, newPercent), numberToNumber(64, 235, newPercent), numberToNumber(82, 55, newPercent), 255};
+        end
+
+        if (christmasPercent > 1) then
+            onionChristmasSwitch = not onionChristmasSwitch;
+            onionChristmasTime = client.UnixTime();
+        end
+    end
 end
 
 --[[
@@ -611,13 +662,18 @@ local function extrapolatedPosition() -- just get current max charge and do some
         local velX, velY, velZ = entity.get_prop(localPlayer, "m_vecVelocity");
         local originX, originY, originZ = entity.get_origin(localPlayer);
         local endX, endY = originX + velX * percent, originY + velY * percent;
-        draw3D({ x = endX, y = endY, z = originZ }, 8, { r = 255, g = 255, b = 255, a = 150 }, true, object3D.circle);
+
+        local drawColor = { r = 255, g = 255, b = 255, a = 150 };
+        if (ui.get(onionChristmasMode)) then
+            drawColor= { r = onionChristmasGlobalColor[1], g = onionChristmasGlobalColor[2], b = onionChristmasGlobalColor[3], a = 150 }
+        end
+
+        draw3D({ x = endX, y = endY, z = originZ }, 8, drawColor, true, object3D.circle);
     end
 end
 
 --[[
     RS Function
-    yeah I can hit 150 wpm at 10% accuracy nn
 --]]
 
 local onionRSCleaner = ui.new_checkbox("Misc", "Miscellaneous", "Clean reset score");
@@ -640,8 +696,9 @@ end
 local onionRSCleaner = ui.new_checkbox("Misc", "Miscellaneous", "Anti-AFK");
 
 local function antiAFKMove(cmd)
-    local afk = ui.get(onionRSCleaner);
-    cmd.in_left, cmd.in_right = afk, afk;
+    if (ui.get(onionRSCleaner)) then
+        cmd.in_left, cmd.in_right = true, true;
+    end
 end
 
 --[[
@@ -758,11 +815,9 @@ end
 local onionKillsaySetting = ui.new_combobox("Misc", "Miscellaneous", "Killsay", { "Off", "On", "Targetted" });
 
 local killMessages = {
-    "1", "You just got merked, respectfully.",
-    "15$ more just to lose lmfao",
-    "hahaha stevie wonder woulda hit that",
-    "jesus christ", "Missclick",
-    "lick my sphincter nn dog", "cry", "*DEAD*",
+    "1", "You suck.",
+    "nice stevie wonder aim", "Missclick",
+    "lick my sphincter", "*DEAD*",
 };
 
 local function playerKilledEvent(event) -- Run killsay for every player when attacking or for specified players in the plist
@@ -865,8 +920,12 @@ local function hitmarkerEvent(event) -- add hitmarker information to a table to 
                     set = true;
                 end
             end
-
-            table.insert(hitTable, { endVec, globals.curtime(), hitWords[client.random_int(1, #hitWords)], wordColors[client.random_int(1, #wordColors)] });
+            
+            if (ui.get(onionChristmasMode)) then
+                table.insert(hitTable, { endVec, globals.curtime(), hitWords[client.random_int(1, #hitWords)], christmasColors[client.random_int(1, #christmasColors)]});
+            else
+                table.insert(hitTable, { endVec, globals.curtime(), hitWords[client.random_int(1, #hitWords)], wordColors[client.random_int(1, #wordColors)] });
+            end
         end
     end
 end
@@ -1111,6 +1170,35 @@ local function voteRevealEvent(event) -- Run a notification and print when a pla
 end
 
 --[[
+    Fake Flick Functions
+--]]
+
+local onionFlickCurtime = globals.curtime();
+local onionFakeFlick = ui.new_hotkey("AA", "Other", "Fake Flick")
+local onionYawRef1, onionYawRef2 = ui.reference("AA","Anti-aimbot angles","Yaw")
+local onionBodyYawRef1, onionBodyYawRef2 = ui.reference("AA","Anti-aimbot angles","Body yaw")
+local onionFakelagLimitRef, onionFlicked = ui.reference("AA","Fake lag","Limit"), false
+
+local function fakeFlickEvent(event)
+    onionFlicked = not onionFlicked;
+    
+    if (ui.get(onionFakeFlick)) then
+        ui.set(onionFakelagLimitRef, 1)
+    else
+        ui.set(onionFakelagLimitRef, 14)
+    end
+
+    ui.set(onionBodyYawRef2, 180)
+    ui.set(onionBodyYawRef1, "Static")
+    if globals.curtime() > onionFlickCurtime + 0.1 and ui.get(onionFakeFlick) then
+        ui.set(onionYawRef2, 100)
+        onionFlickCurtime = globals.curtime()
+    else
+        ui.set(onionYawRef2, 0)
+    end
+end
+
+--[[
     ESP Grid Functions
 --]]
 
@@ -1158,6 +1246,11 @@ local function drawGridSquarePos(ent, gridSize, addY, addX) -- Calculate box pos
             local x4, y4 = renderer.world_to_screen(gridSquaresOutX2, gridSquaresOutY2, entOrigin.z); if (not x4 or not y4) then return; end
             
             local r, g, b, a = ui.get(onionGridESPColor);
+
+            if (ui.get(onionChristmasMode)) then
+                r, g, b, a = table.unpack(onionChristmasGlobalColor); a = 120;
+            end
+
             renderer.line(x3, y3, x4, y4, r, g, b, 255)
             renderer.line(x, y, x2, y2, r, g, b, 255)
             renderer.line(x4, y4, x2, y2, r, g, b, 255)
@@ -1184,6 +1277,68 @@ local function runGridESP() -- Enumerate thru all players to draw their grid box
 end
 
 --[[
+    Personal Weather
+--]]
+
+local radiusSlider, heightSlider, dropletSlider, dropletHeightSlider, dropletTimeSlider = 50, 125, 150, 1, 10000;
+local weatherUnixTime = client.UnixTime();
+
+local weatherCache = {};
+local function regenerateWeatherTable()
+    weatherCache = {};
+    local radiusHalf = radiusSlider
+    local dropletTime = dropletTimeSlider
+
+    for i = 1, dropletSlider do
+        local r = radiusHalf * math.sqrt((math.random(0, 1000) / 1000));
+        local theta = (math.random(0, 1000) / 1000) * 2 * math.pi;
+        table.insert(weatherCache, {pos = vector(r * math.cos(theta), r * math.sin(theta)), color = math.random(1, 2), 
+                                    percent = 0, dropletTime = math.random(dropletTime), startTime = weatherUnixTime});
+    end
+end
+
+local onionPlayerParticles = ui.new_checkbox("Visuals", "Player ESP", "Player Particles");
+local onionPlayerParticlesColor = ui.new_color_picker("Visuals", "Player ESP", "Particles Color", 255, 255, 255, 255);
+regenerateWeatherTable();
+
+local function runPlayerParticles()
+    if (ui.get(onionPlayerParticles)) then
+        weatherUnixTime = client.UnixTime();
+        local localOrigin = vector(entity.get_origin(localPlayer))
+        local fraction = client.trace_line(localPlayer, localOrigin.x, localOrigin.y, localOrigin.z, localOrigin.x, localOrigin.y, localOrigin.z - 1000);
+        local floorHeight = vector(localOrigin.x, localOrigin.y, localOrigin.z - 1000 * fraction);
+        local totalHeight = heightSlider;
+        local heightToFloor = math.abs(floorHeight.z - localOrigin.z) + totalHeight;
+        local dropletSize = dropletHeightSlider;
+        local dropletTime = dropletTimeSlider;
+
+        for i = 1, #weatherCache do
+            if (weatherCache[i].dropletTime <= weatherUnixTime - weatherCache[i].startTime) then
+                weatherCache[i].percent = 0; weatherCache[i].dropletTime = math.random(dropletTime); weatherCache[i].startTime = weatherUnixTime;
+            else
+                weatherCache[i].percent = (weatherUnixTime - weatherCache[i].startTime) / weatherCache[i].dropletTime;
+            end
+
+            local dropletPos = vector(localOrigin.x + weatherCache[i].pos.x, localOrigin.y + weatherCache[i].pos.y, localOrigin.z + totalHeight - (heightToFloor * weatherCache[i].percent));
+            local dropletPos2 = vector(dropletPos.x, dropletPos.y, localOrigin.z + totalHeight - (heightToFloor * weatherCache[i].percent) - dropletSize);
+            local dropletVec2, droplet2Vec2 = vector(renderer.world_to_screen(dropletPos:unpack())), vector(renderer.world_to_screen(dropletPos2:unpack()));
+
+            if (dropletVec2.x >= 0 and dropletVec2.x <= scrW and dropletVec2.y >= 0 and dropletVec2.y <= scrH) then
+                if (droplet2Vec2.x >= 0 and droplet2Vec2.x <= scrW and droplet2Vec2.y >= 0 and droplet2Vec2.y <= scrH) then
+                    if (not ui.get(onionChristmasMode)) then
+                        renderer.line(dropletVec2.x, dropletVec2.y, droplet2Vec2.x, droplet2Vec2.y, ui.get(onionPlayerParticlesColor));
+                    elseif (weatherCache[i].color == 1) then
+                        renderer.line(dropletVec2.x, dropletVec2.y, droplet2Vec2.x, droplet2Vec2.y, christmasColors[1][1], christmasColors[1][2], christmasColors[1][3], 255);
+                    elseif (weatherCache[i].color == 2) then
+                        renderer.line(dropletVec2.x, dropletVec2.y, droplet2Vec2.x, droplet2Vec2.y, christmasColors[2][1], christmasColors[2][2], christmasColors[2][3], 255);
+                    end
+                end
+            end
+        end
+    end
+end
+
+--[[
     Callbacks
 --]]
 
@@ -1202,6 +1357,7 @@ client.set_event_callback("paint_ui", function()
         windows.runPaint();
 
         if (not Initialization) then
+            runRainbow();
             if (ui.get(onionBlockbot)) then blockbotPaint(); else blockbot.isOn = false; end
             if (ui.get(onionExtrapolation)) then extrapolatedPosition(); end
             if (ui.get(crosshairControls[1])) then crosshairPaint(); end
@@ -1210,6 +1366,7 @@ client.set_event_callback("paint_ui", function()
             overridePaint();
             previewPaint();
             runGridESP();
+            runPlayerParticles();
         else
             Initialization = false;
         end
@@ -1221,14 +1378,7 @@ client.set_event_callback("setup_command", function(cmd)
         if (ui.get(onionBlockbot)) then blockbotMove(cmd); else blockbot.isOn = false; end
         antiAFKMove(cmd);
         overrideMove();
-    end
-
-    if (ui.is_menu_open()) then
-        cmd.in_attack = false; cmd.in_attack2 = false;
-        cmd.in_jump = false; cmd.in_reload = false;
-        cmd.in_duck = false; cmd.in_cancel = false;
-        cmd.in_score = false; cmd.in_grenade1 = false;
-        cmd.in_grenade2 = false; cmd.in_attack3 = false;
+        fakeFlickEvent(cmd);
     end
 end);
 
