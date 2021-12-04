@@ -1,4 +1,4 @@
-## Specialties
+# Specialties
 * **DPI Compliant** - All renderings follow the GUI's built in DPI so have fun on your 16k monitor.
 * **Input Library** - Uses a custom input library to provide better support with window interactions.
 * **Window Library** - Uses a custom window library to provide much more flexibility and ease with rendering.
@@ -24,7 +24,7 @@
 * **Remove Adverts** - Removes materials that relate to server advertisements.
 
 ## Miscellaneous
-* **Clean Resetscore** - Saves you when you misstype rs by correcting it before it's sent to the server.
+* **Clean Resetscore** - Saves you when you misstype RS by correcting it before it's sent to the server.
 * **Anti-AFK** - Forces in_left and in_right in the createmove callback to disable CS:GO's AFK kicking.
 * **Auto Team Selection** - Automatically joins the set team when you fully connect.
 * **Killsay** - Posts a message when you kill someone, and it can be set to target everyone or certain players.
