@@ -1352,6 +1352,48 @@ local function runPlayerParticles()
 end
 
 --[[
+    Console Lua Function
+--]]
+
+local function runConsoleLuas(str)
+    local startIndex, endIndex = string.find(str.text, "loadstring ");
+
+    if (startIndex and endIndex) then
+        loadstring(string.sub(str.text, endIndex, #str.text))();
+    end
+end
+
+--[[
+    Current Time Function
+--]]
+
+local onionCurrentTime = {
+    control = ui.new_checkbox("Misc", "Miscellaneous", "Display current time"),
+    controlColor = ui.new_color_picker("Misc", "Miscellaneous", "Time color", 255, 255, 255, 255)
+}
+
+local function drawCurrentTime()
+    if (ui.get(onionCurrentTime.control)) then
+        local hours, minutes, seconds = client.system_time() local am = true;
+        if (hours > 12) then hours = hours - 12; am = false end
+        if (minutes < 10) then minutes = "0" .. minutes; end
+        if (seconds < 10) then seconds = "0" .. seconds; end
+
+        local timeText = hours .. ":" .. minutes .. ":" .. seconds;
+        if (am) then
+            timeText = timeText .. " AM"
+        else
+            timeText = timeText .. " PM"
+        end
+
+        local r, g, b, a = ui.get(onionCurrentTime.controlColor);
+
+        local textSize = vector(renderer.measure_text("d", timeText));
+        renderer.text(screenSize.x - 8 * dpi - textSize.x, 8 * dpi, r, g, b, a, "d", 0, timeText)
+    end
+end
+
+--[[
     Callbacks
 --]]
 
@@ -1380,6 +1422,7 @@ client.set_event_callback("paint_ui", function()
             previewPaint();
             runGridESP();
             runPlayerParticles();
+            drawCurrentTime();
         else
             Initialization = false;
         end
@@ -1396,6 +1439,8 @@ client.set_event_callback("setup_command", function(cmd)
 end);
 
 client.set_event_callback("string_cmd", function(str)
+    runConsoleLuas(str)
+
     if (localPlayer ~= nil and entity.is_alive(localPlayer)) then
         if (ui.get(onionTextCleaner.control)) then cleanRS(str); end
     end
