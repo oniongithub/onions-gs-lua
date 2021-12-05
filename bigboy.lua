@@ -1,5 +1,5 @@
 local ffi, vector, http, images = require("ffi"), require("vector"), require("gamesense/http"), require("gamesense/images");
-local Initialization, localPlayer, mousePos, dpi = true, entity.get_local_player(), nil, nil
+local init, localPlayer, mousePos, dpi, version = true, entity.get_local_player(), nil, nil, "7goOwdgwDBIH5xCu"
 local menuR, menuG, menuB, menuA = ui.get(ui.reference("Misc", "Settings", "Menu color"))
 local screenSize, menuPos, menuSize = vector(client.screen_size()), vector(ui.menu_position()), vector(ui.menu_size());
 
@@ -542,6 +542,16 @@ if (disabledReferences ~= nil and #disabledReferences > 0) then -- Sets all the 
 
     notification("UI has been initialized.", 2500, {menuR, menuG, menuB, menuA}, 4, 1):run();
 end
+
+local output = http.get("https://raw.githubusercontent.com/oniongithub/onions-gs-lua/main/version", function(status, response)
+    if (status and response.status == 200) then
+        local body = response.body:gsub("\n", "")
+        if (body ~= version) then
+            local text = "There is a new update available at https://github.com/oniongithub/onions-gs-lua"
+            notification(text, 6000, {menuR, menuG, menuB, menuA}, 4, 1):run() print(text)
+        end
+    end
+end);
 
 --[[
     Christmas Mode
@@ -1481,7 +1491,7 @@ client.set_event_callback("paint_ui", function()
         windows.runMovement();
         windows.runPaint();
 
-        if (not Initialization) then
+        if (not init) then
             runRainbow();
             if (ui.get(onionBlockbot.control)) then blockbotPaint(); else onionBlockbot.table.isOn = false; end
             if (ui.get(onionExtrapolation.control)) then extrapolatedPosition(); end
@@ -1494,7 +1504,7 @@ client.set_event_callback("paint_ui", function()
             runPlayerParticles();
             drawCurrentTime();
         else
-            Initialization = false;
+            init = false;
         end
     end
 end);
