@@ -23,6 +23,7 @@
 * **Custom Crosshair** - Allows you to create a custom crosshair that is present on snipers as well.
 * **Thirdperson Extension** - Allows you to toggle collisions and set a custom distance.
 * **Remove Adverts** - Removes materials that relate to server advertisements.
+* **Hideshots Indicator** - Adds a hideshots indicator to the default GS indicators.
 
 ## Miscellaneous
 * **Clean Resetscore** - Saves you when you misstype RS by correcting it before it's sent to the server.
