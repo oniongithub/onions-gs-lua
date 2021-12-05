@@ -1049,7 +1049,8 @@ local onionCrosshair = {
         ui.new_checkbox("Visuals", "Other ESP", "Crosshair enabled"),
         ui.new_slider("Visuals", "Other ESP", "Crosshair distance", 0, 100, 15),
         ui.new_slider("Visuals", "Other ESP", "Crosshair size", 0, 100, 20),
-        ui.new_color_picker("Visuals", "Other ESP", "Crosshair color", 255, 255, 255, 255)
+        ui.new_color_picker("Visuals", "Other ESP", "Crosshair color", 255, 255, 255, 255),
+        ui.new_checkbox("Visuals", "Other ESP", "Crosshair circle")
     }, shown = true
 }
 
@@ -1083,7 +1084,9 @@ local function crosshairPaint()
     renderer.line(screenSize.x / 2 - (ui.get(onionCrosshair.controls[2]) + ui.get(onionCrosshair.controls[3])) * dpi, screenSize.y / 2, screenSize.x / 2 - ui.get(onionCrosshair.controls[2]) * dpi, screenSize.y / 2, r, g, b, a);
     renderer.line(screenSize.x / 2 + (ui.get(onionCrosshair.controls[2]) + ui.get(onionCrosshair.controls[3])) * dpi, screenSize.y / 2, screenSize.x / 2 + ui.get(onionCrosshair.controls[2]) * dpi, screenSize.y / 2, r, g, b, a);
 
-    renderer.circle_outline(screenSize.x / 2, screenSize.y / 2, r, g, b, a, ui.get(onionCrosshair.controls[2]) * dpi, 0, 1, 1)
+    if (ui.get(onionCrosshair.controls[5])) then
+        renderer.circle_outline(screenSize.x / 2, screenSize.y / 2, r, g, b, a, ui.get(onionCrosshair.controls[2]) * dpi, 0, 1, 1)
+    end
 end
 
 --[[
