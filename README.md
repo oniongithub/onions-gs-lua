@@ -44,3 +44,4 @@
 * **Repeat Target** - Will repeat player messages for players if the mode is set to targetted.
 * **Steal Username** - Steals a player's username.
 * **Steal Clantag** - Steals a player's clantag.
+* **Dump Wins** - Dumps a player's competitive wins.
