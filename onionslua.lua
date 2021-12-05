@@ -1278,9 +1278,7 @@ local onionVoteLog = {
 
 local function voteRevealEvent(event) -- Run a notification and print when a player votes
     if (ui.get(onionVoteLog)) then
-        local voteEntity = event.entityid
-        local vote = event.vote_option
-        local voteBool
+        local voteEntity, vote, voteBool = event.entityid, event.vote_option, nil
         local voteEntityName = entity.get_player_name(voteEntity)
 
         if (vote == 0) then voteBool = "Yes" elseif (vote == 1) then 
