@@ -775,7 +775,7 @@ removeAdvertisement()
 --]]
 
 local onionHideshots = {
-    control = ui.new_checkbox("Visuals", "Effects", "Hideshots Indicator"),
+    control = ui.new_checkbox("Visuals", "Effects", "Hideshots indicator"),
 }
 
 local function drawHideshotsIndicator()
@@ -1273,7 +1273,7 @@ end
 --]]
 
 local onionVoteLog = {
-    control = ui.new_checkbox("Misc", "Miscellaneous", "Vote Revealer")
+    control = ui.new_checkbox("Misc", "Miscellaneous", "Vote revealer")
 }
 
 local function voteRevealEvent(event) -- Run a notification and print when a player votes
@@ -1299,7 +1299,7 @@ end
 
 local onionFakeFlick = {
     curTime = globals.curtime(), flicked = false,
-    control = ui.new_hotkey("AA", "Other", "Fake Flick"),
+    control = ui.new_hotkey("AA", "Other", "Fake flick"),
     cache = {cached = false, fl = 1, by1 = 0, by2 = "Off", y2 = 0},
 }
 
@@ -1340,9 +1340,9 @@ end
 --]]
 
 local onionGrid = {
-    enableControl = ui.new_checkbox("Visuals", "Player ESP", "Grid ESP"),
-    colorControl = ui.new_color_picker("Visuals", "Player ESP", "Grid Color", 180, 180, 180, 120),
-    sizeControl = ui.new_slider("Visuals", "Player ESP", "Grid ESP Size", 10, 1000, 200), frame = {}
+    enableControl = ui.new_checkbox("Visuals", "Player ESP", "Player grid"),
+    colorControl = ui.new_color_picker("Visuals", "Player ESP", "Grid color", 180, 180, 180, 120),
+    sizeControl = ui.new_slider("Visuals", "Player ESP", "Grid size", 10, 1000, 200), frame = {}
 }
 
 local function gridContained(x, y, x2, y2) -- Overlapping box check
@@ -1419,8 +1419,8 @@ end
 
 local onionWeather = {
     radiusSlider = 50, heightSlider = 125, dropletSlider = 150, dropletHeightSlider = 1, dropletTimeSlider = 10000,
-    time = client.UnixTime(), cache = {}, particleControl = ui.new_checkbox("Visuals", "Player ESP", "Player Particles"),
-    colorControl = ui.new_color_picker("Visuals", "Player ESP", "Particles Color", 255, 255, 255, 255)
+    time = client.UnixTime(), cache = {}, particleControl = ui.new_checkbox("Visuals", "Player ESP", "Player particles"),
+    colorControl = ui.new_color_picker("Visuals", "Player ESP", "Particles color", 255, 255, 255, 255)
 }
 
 local function regenerateWeatherTable()
