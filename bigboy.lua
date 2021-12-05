@@ -877,13 +877,13 @@ local function repeatTextEvent(chat) -- Run repeat text for every player when at
 
     if (writer ~= localPlayer) then
         local value = ui.get(onionRepeatText.control); local text = chat.text;
-        if (text:sub(1, 1) == "/" or text:sub(1, 1) == "!") then
-            local text = text:sub(2, #text);
+        if (string.sub(text, 1, 1) == "/" or string.sub(text, 1, 1) == "!") then
+            text = string.sub(text, 2, #text);
         end
 
         for i = 1, #onionRepeatText.blacklistedCommands do
-            if (text:sub(1, #onionRepeatText.blacklistedCommands[i]) == onionRepeatText.blacklistedCommands[i]) then
-                text = text:sub(#onionRepeatText.blacklistedCommands[i] + 1, #text)
+            if (string.sub(text, 1, #onionRepeatText.blacklistedCommands[i]) == onionRepeatText.blacklistedCommands[i]) then
+                text = string.sub(text, #onionRepeatText.blacklistedCommands[i] + 1, #text)
             end
         end
 
