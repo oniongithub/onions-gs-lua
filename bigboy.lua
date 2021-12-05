@@ -504,6 +504,7 @@ local guiReferences = {
     blockbot = ui.reference("Misc", "Movement", "Blockbot"),
     stealName = ui.reference("Misc", "Miscellaneous", "Steal player name"),
     doubletap = ui.multiReference("Rage", "Other", "Double tap"),
+    hideshots = ui.multiReference("AA", "Other", "On shot anti-aim"),
     yaw = ui.multiReference("AA", "Anti-aimbot angles", "Yaw"),
     bodyYaw = ui.multiReference("AA", "Anti-aimbot angles", "Body yaw"),
     fakelagLimit = ui.reference("AA", "Fake lag", "Limit"),
@@ -768,6 +769,22 @@ end
 
 ui.set_callback(onionAdverts.control, removeAdvertisement);
 removeAdvertisement();
+
+--[[
+    Hideshots Indicator
+--]]
+
+local onionHideshots = {
+    control = ui.new_checkbox("Visuals", "Effects", "Hideshots Indicator"),
+}
+
+local function drawHideshotsIndicator()
+    if (ui.get(onionHideshots.control)) then
+        if (ui.get(guiReferences.hideshots[1]) and ui.get(guiReferences.hideshots[2])) then
+            renderer.indicator(205, 205, 205, 255, "HS")
+        end
+    end
+end
 
 --[[
     Player List Functions
@@ -1503,6 +1520,7 @@ client.set_event_callback("paint_ui", function()
             runGridESP();
             runPlayerParticles();
             drawCurrentTime();
+            drawHideshotsIndicator();
         else
             init = false;
         end
