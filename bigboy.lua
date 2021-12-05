@@ -1461,10 +1461,6 @@ local function drawCurrentTime()
 end
 
 --[[
-    Panorama Testing
---]]
-
---[[
     Callbacks
 --]]
 
