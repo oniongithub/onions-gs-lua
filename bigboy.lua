@@ -785,6 +785,17 @@ local onionStealTag = ui.new_button("Players", "Adjustments", "Steal clantag", f
     end
 end);
 
+local onionDumpWins = ui.new_button("Players", "Adjustments", "Dump wins", function()
+    local player = ui.get(guiReferences.playerList);
+
+    local wins = panorama.loadstring([[
+        const newXUID = GameStateAPI.GetPlayerXuidStringFromEntIndex(]] .. player .. [[);
+        return GameStateAPI.GetPlayerCompetitiveWins(newXUID);
+    ]])();
+
+    print(wins);
+end);
+
 for i = 1, #playerListControls do -- modification of duke's post using tables so we don't need repetitive code viewtopic.php?id=19293
     ui.set_callback(playerListControls[i].reference, function()
         if (ui.get(playerListControls[i].reference)) then
@@ -1232,25 +1243,39 @@ end
 
 local onionFakeFlick = {
     curTime = globals.curtime(), flicked = false,
-    control = ui.new_hotkey("AA", "Other", "Fake Flick")
+    control = ui.new_hotkey("AA", "Other", "Fake Flick"),
+    cache = {cached = false, fl = 1, by1 = 0, by2 = "Off", y2 = 0},
 }
 
 local function fakeFlickEvent(event)
-    onionFakeFlick.flicked = not onionFakeFlick.flicked;
-    
     if (ui.get(onionFakeFlick.control)) then
-        ui.set(guiReferences.fakelagLimit, 1)
-    else
-        ui.set(guiReferences.fakelagLimit, 14)
-    end
+        if (not onionFakeFlick.cache.cached) then
+            onionFakeFlick.cache.cached = true;
+            onionFakeFlick.cache.fl = ui.get(guiReferences.fakelagLimit);
+            onionFakeFlick.cache.by1 = ui.get(guiReferences.bodyYaw[1]);
+            onionFakeFlick.cache.by2 = ui.get(guiReferences.bodyYaw[2]);
+            onionFakeFlick.cache.y2 = ui.get(guiReferences.yaw[2]);
+        end
 
-    ui.set(guiReferences.bodyYaw[2], 180)
-    ui.set(guiReferences.bodyYaw[1], "Static")
-    if (globals.curtime() > onionFakeFlick.curTime + 0.1 and ui.get(onionFakeFlick.control)) then
-        ui.set(guiReferences.yaw[2], 100)
-        onionFakeFlick.curTime = globals.curtime()
+        onionFakeFlick.flicked = not onionFakeFlick.flicked;
+        ui.set(guiReferences.fakelagLimit, 1)
+        ui.set(guiReferences.bodyYaw[2], 180)
+        ui.set(guiReferences.bodyYaw[1], "Static")
+        
+        if (globals.curtime() >= onionFakeFlick.curTime + 0.1) then
+            ui.set(guiReferences.yaw[2], 100)
+            onionFakeFlick.curTime = globals.curtime()
+        else
+            ui.set(guiReferences.yaw[2], 0)
+        end
     else
-        ui.set(guiReferences.yaw[2], 0)
+        if (onionFakeFlick.cache.cached) then
+            onionFakeFlick.cache.cached = false;
+            ui.set(guiReferences.fakelagLimit, onionFakeFlick.cache.fl);
+            ui.set(guiReferences.bodyYaw[1], onionFakeFlick.cache.by1);
+            ui.set(guiReferences.bodyYaw[2], onionFakeFlick.cache.by2);
+            ui.set(guiReferences.yaw[2], onionFakeFlick.cache.y2);
+        end
     end
 end
 
@@ -1434,6 +1459,10 @@ local function drawCurrentTime()
         renderer.text(screenSize.x - 8 * dpi - textSize.x, 8 * dpi, r, g, b, a, "d", 0, timeText)
     end
 end
+
+--[[
+    Panorama Testing
+--]]
 
 --[[
     Callbacks
