@@ -1074,10 +1074,11 @@ setConsoleFilter()
 local onionCrosshair = {
     controls = { 
         ui.new_checkbox("Visuals", "Other ESP", "Crosshair enabled"),
-        ui.new_slider("Visuals", "Other ESP", "Crosshair distance", 0, 100, 15),
-        ui.new_slider("Visuals", "Other ESP", "Crosshair size", 0, 100, 20),
+        ui.new_slider("Visuals", "Other ESP", "Crosshair distance", 0, 25, 15),
+        ui.new_slider("Visuals", "Other ESP", "Crosshair size", 0, 20, 20),
         ui.new_color_picker("Visuals", "Other ESP", "Crosshair color", 255, 255, 255, 255),
-        ui.new_checkbox("Visuals", "Other ESP", "Crosshair circle")
+        ui.new_checkbox("Visuals", "Other ESP", "Crosshair circle"),
+        ui.new_checkbox("Visuals", "Other ESP", "Crosshair preview")
     }, shown = true
 }
 
@@ -1098,21 +1099,46 @@ ui.set_callback(onionCrosshair.controls[1], function()
 end)
 
 local toggleControl = ui.new_button("Visuals", "Other ESP", "Toggle crosshair settings", function() runCrosshairButton() end)
+windows.add("crosshairPreview", window(20, 20, 150, 152, "", {menuR, menuG, menuB, menuA}, windows.styles.default, true))
 runCrosshairButton()
 
 local function crosshairPaint()
-    local r, g, b, a = ui.get(onionCrosshair.controls[4])
+    local win = windows.get("crosshairPreview")
 
-    -- Vertical
-    renderer.line(screenSize.x / 2, screenSize.y / 2 - (ui.get(onionCrosshair.controls[2]) + ui.get(onionCrosshair.controls[3])) * dpi, screenSize.x / 2, screenSize.y / 2 - ui.get(onionCrosshair.controls[2]) * dpi, r, g, b, a)
-    renderer.line(screenSize.x / 2, screenSize.y / 2 + (ui.get(onionCrosshair.controls[2]) + ui.get(onionCrosshair.controls[3])) * dpi, screenSize.x / 2, screenSize.y / 2 + ui.get(onionCrosshair.controls[2]) * dpi, r, g, b, a)
+    if (ui.get(onionCrosshair.controls[1])) then
+        local r, g, b, a = ui.get(onionCrosshair.controls[4])
 
-    -- Horizontal
-    renderer.line(screenSize.x / 2 - (ui.get(onionCrosshair.controls[2]) + ui.get(onionCrosshair.controls[3])) * dpi, screenSize.y / 2, screenSize.x / 2 - ui.get(onionCrosshair.controls[2]) * dpi, screenSize.y / 2, r, g, b, a)
-    renderer.line(screenSize.x / 2 + (ui.get(onionCrosshair.controls[2]) + ui.get(onionCrosshair.controls[3])) * dpi, screenSize.y / 2, screenSize.x / 2 + ui.get(onionCrosshair.controls[2]) * dpi, screenSize.y / 2, r, g, b, a)
+        -- Vertical
+        renderer.line(screenSize.x / 2, screenSize.y / 2 - (ui.get(onionCrosshair.controls[2]) + ui.get(onionCrosshair.controls[3])) * dpi, screenSize.x / 2, screenSize.y / 2 - ui.get(onionCrosshair.controls[2]) * dpi, r, g, b, a)
+        renderer.line(screenSize.x / 2, screenSize.y / 2 + (ui.get(onionCrosshair.controls[2]) + ui.get(onionCrosshair.controls[3])) * dpi, screenSize.x / 2, screenSize.y / 2 + ui.get(onionCrosshair.controls[2]) * dpi, r, g, b, a)
 
-    if (ui.get(onionCrosshair.controls[5])) then
-        renderer.circle_outline(screenSize.x / 2, screenSize.y / 2, r, g, b, a, ui.get(onionCrosshair.controls[2]) * dpi, 0, 1, 1)
+        -- Horizontal
+        renderer.line(screenSize.x / 2 - (ui.get(onionCrosshair.controls[2]) + ui.get(onionCrosshair.controls[3])) * dpi, screenSize.y / 2, screenSize.x / 2 - ui.get(onionCrosshair.controls[2]) * dpi, screenSize.y / 2, r, g, b, a)
+        renderer.line(screenSize.x / 2 + (ui.get(onionCrosshair.controls[2]) + ui.get(onionCrosshair.controls[3])) * dpi, screenSize.y / 2, screenSize.x / 2 + ui.get(onionCrosshair.controls[2]) * dpi, screenSize.y / 2, r, g, b, a)
+
+        if (ui.get(onionCrosshair.controls[5])) then
+            renderer.circle_outline(screenSize.x / 2, screenSize.y / 2, r, g, b, a, ui.get(onionCrosshair.controls[2]) * dpi, 0, 1, 1)
+        end
+
+        if (ui.is_menu_open() and ui.get(onionCrosshair.controls[6])) then
+            win.x, win.y, win.visible = menuPos.x + menuSize.x + 8 * dpi, menuPos.y + ((menuSize.y / 2) - ((win.h * dpi) / 2)), true
+
+            -- Vertical
+            renderer.line(win.x + 75 * dpi, win.y + 76 * dpi - (ui.get(onionCrosshair.controls[2]) + ui.get(onionCrosshair.controls[3])) * dpi, win.x + 75 * dpi, win.y + 76 * dpi - ui.get(onionCrosshair.controls[2]) * dpi, r, g, b, a)
+            renderer.line(win.x + 75 * dpi, win.y + 76 * dpi + (ui.get(onionCrosshair.controls[2]) + ui.get(onionCrosshair.controls[3])) * dpi, win.x + 75 * dpi, win.y + 76 * dpi + ui.get(onionCrosshair.controls[2]) * dpi, r, g, b, a)
+
+            -- Horizontal
+            renderer.line(win.x + 75 * dpi - (ui.get(onionCrosshair.controls[2]) + ui.get(onionCrosshair.controls[3])) * dpi, win.y + 76 * dpi, win.x + 75 * dpi - ui.get(onionCrosshair.controls[2]) * dpi, win.y + 76 * dpi, r, g, b, a)
+            renderer.line(win.x + 75 * dpi + (ui.get(onionCrosshair.controls[2]) + ui.get(onionCrosshair.controls[3])) * dpi, win.y + 76 * dpi, win.x + 75 * dpi + ui.get(onionCrosshair.controls[2]) * dpi, win.y + 76 * dpi, r, g, b, a)
+        
+            if (ui.get(onionCrosshair.controls[5])) then
+                renderer.circle_outline(win.x + 75 * dpi, win.y + 75 * dpi, r, g, b, a, ui.get(onionCrosshair.controls[2]) * dpi, 0, 1, 1)
+            end
+        else
+            win.visible = false
+        end
+    else
+        win.visible = false
     end
 end
 
@@ -1512,7 +1538,7 @@ client.set_event_callback("paint_ui", function()
             runRainbow()
             if (ui.get(onionBlockbot.control)) then blockbotPaint() else onionBlockbot.table.isOn = false end
             if (ui.get(onionExtrapolation.control)) then extrapolatedPosition() end
-            if (ui.get(onionCrosshair.controls[1])) then crosshairPaint() end
+            crosshairPaint()
             espDistancePaint()
             hitmarkerPaint()
             overridePaint()
