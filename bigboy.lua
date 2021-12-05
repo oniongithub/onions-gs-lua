@@ -865,14 +865,25 @@ end
 
 local onionRepeatText = {
     control = ui.new_combobox("Misc", "Miscellaneous", "Repeat text", { "Off", "On", "Targetted" }),
+    blacklistedCommands = { "rs", "rank", "top", "ban", "admin", "kick", "addban", "banip", "cancelvote",
+                            "cvar", "execcfg", "help", "map", "rcon", "reloadadmins", "unban", "who", "beacon",
+                            "burn", "chat", "csay", "gag", "hsay", "msay", "mute", "play", "psay", "rename",
+                            "resetcvar", "say", "silence", "slap", "slay", "tsay", "ungag", "unmute", "unsilence",
+                            "vote", "votealltalk", "voteban", "voteburn", "voteff", "votegravity", "votekick", "votemap", "voteslay" };
 }
 
 local function repeatTextEvent(chat) -- Run repeat text for every player when attacking or for specified players in the plist
     local writer = chat.entity;
 
     if (writer ~= localPlayer) then
-        local value = ui.get(onionRepeatText.control);
-        local text = chat.text:gsub("rs", "");
+        local value = ui.get(onionRepeatText.control); local text = chat.text;
+        if (text:sub(1, 1) == "/" or text:sub(1, 1) == "!") then
+            local text = text:sub(2, #text);
+        end
+
+        for i = 1, #onionRepeatText.blacklistedCommands do
+            text = text:gsub(onionRepeatText.blacklistedCommands[i], "");
+        end
 
         if (value ~= "Off") then
             if (value == "On") then
