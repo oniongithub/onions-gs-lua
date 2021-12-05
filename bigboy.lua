@@ -71,6 +71,17 @@ local function traceCrosshair() -- trace to the end of your crosshair using eye 
     return percent, hitEnt, crosshairLocation;
 end
 
+local function contains(table, key)
+    for index, value in pairs(table) do
+        if value == key then return true, index end
+    end
+    return false, nil
+end
+
+local function numberToNumber(num1, num2, percent)
+    return math.clamp(num1 + (num2 - num1) * percent, 0, 255);
+end
+
 function math.clamp(number, min, max)
     if (number >= max) then
         return max;
@@ -79,10 +90,6 @@ function math.clamp(number, min, max)
     else
         return number;
     end
-end
-
-local function numberToNumber(num1, num2, percent)
-    return math.clamp(num1 + (num2 - num1) * percent, 0, 255);
 end
 
 function client.UnixTime()
@@ -759,6 +766,7 @@ removeAdvertisement();
 local playerListControls = {
     { table = {}, reference = ui.new_checkbox("Players", "Adjustments", "Blockbot priority") },
     { table = {}, reference = ui.new_checkbox("Players", "Adjustments", "Killsay target") },
+    { table = {}, reference = ui.new_checkbox("Players", "Adjustments", "Repeat target") },
 };
 
 local onionStealName = ui.new_button("Players", "Adjustments", "Steal username", function()
@@ -776,13 +784,6 @@ local onionStealTag = ui.new_button("Players", "Adjustments", "Steal clantag", f
         client.set_clan_tag(clantag);
     end
 end);
-
-local function contains(table, key)
-    for index, value in pairs(table) do
-        if value == key then return true, index end
-    end
-    return false, nil
-end
 
 for i = 1, #playerListControls do -- modification of duke's post using tables so we don't need repetitive code viewtopic.php?id=19293
     ui.set_callback(playerListControls[i].reference, function()
@@ -852,6 +853,34 @@ local function playerKilledEvent(event) -- Run killsay for every player when att
                 ui.set(playerListRef, attacked);
                 if (contains(playerListControls[2].table, ui.get(playerListRef))) then 
                     client.exec("say " .. onionKillsay.killMessages[client.random_int(1, #onionKillsay.killMessages)]);
+                end
+            end
+        end
+    end
+end
+
+--[[
+    Repeat Text Function
+--]]
+
+local onionRepeatText = {
+    control = ui.new_combobox("Misc", "Miscellaneous", "Repeat text", { "Off", "On", "Targetted" }),
+}
+
+local function repeatTextEvent(chat) -- Run repeat text for every player when attacking or for specified players in the plist
+    local writer = chat.entity;
+
+    if (writer ~= localPlayer) then
+        local value = ui.get(onionRepeatText.control);
+        local text = chat.text:gsub("rs", "");
+
+        if (value ~= "Off") then
+            if (value == "On") then
+                client.exec("say " .. text);
+            else
+                ui.set(playerListRef, writer);
+                if (contains(playerListControls[3].table, ui.get(playerListRef))) then 
+                    client.exec("say " .. text);
                 end
             end
         end
@@ -1444,6 +1473,10 @@ client.set_event_callback("string_cmd", function(str)
     if (localPlayer ~= nil and entity.is_alive(localPlayer)) then
         if (ui.get(onionTextCleaner.control)) then cleanRS(str); end
     end
+end);
+
+client.set_event_callback("player_chat", function(chat)
+    repeatTextEvent(chat);
 end);
 
 client.set_event_callback("player_connect_full", function(e)
