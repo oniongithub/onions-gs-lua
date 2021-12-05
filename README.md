@@ -3,6 +3,7 @@
 * **Input Library** - Uses a custom input library to provide better support with window interactions.
 * **Window Library** - Uses a custom window library to provide much more flexibility and ease with rendering.
 * **Notification Library** - Uses a custom notification library to provide informative notifications easily.
+* **Update Notifications** - Will inform you when there is a new update available to download.
 
 # Features
 
