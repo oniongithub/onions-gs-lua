@@ -28,6 +28,7 @@
 * **Anti-AFK** - Forces in_left and in_right in the createmove callback to disable CS:GO's AFK kicking.
 * **Auto Team Selection** - Automatically joins the set team when you fully connect.
 * **Killsay** - Posts a message when you kill someone, and it can be set to target everyone or certain players.
+* **Repeat Messages** - Will repeat a players messages, and it can be set to target everyone or certain players. 
 * **Damage Logs** - Logs all damage you give and take to the console.
 * **Buybot** - Automatically buys the set weapons for you on round start, ex: (ssg08, hegrenade, smokegrenade).
 * **Vote Revealer** - Reveals the name of voters and what they voted for.
@@ -40,5 +41,6 @@
 ## Player-List
 * **Blockbot Priority** - Prioritizes a player for the blockbot if they're close enough.
 * **Killsay Target** - Will post killsay messages for a player if the killsay mode is set to targetted.
+* **Repeat Target** - Will repeat player messages for players if the mode is set to targetted.
 * **Steal Username** - Steals a player's username.
 * **Steal Clantag** - Steals a player's clantag.
