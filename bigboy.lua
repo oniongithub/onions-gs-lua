@@ -882,7 +882,9 @@ local function repeatTextEvent(chat) -- Run repeat text for every player when at
         end
 
         for i = 1, #onionRepeatText.blacklistedCommands do
-            text = text:gsub(onionRepeatText.blacklistedCommands[i], "");
+            if (text:sub(1, #onionRepeatText.blacklistedCommands[i]) == onionRepeatText.blacklistedCommands[i]) then
+                text = text:sub(#onionRepeatText.blacklistedCommands[i] + 1, #text)
+            end
         end
 
         if (value ~= "Off") then
