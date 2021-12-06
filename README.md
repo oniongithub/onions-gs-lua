@@ -48,3 +48,10 @@
 * **Steal Username** - Steals a player's username.
 * **Steal Clantag** - Steals a player's clantag.
 * **Dump Wins** - Dumps a player's competitive wins.
+
+#Credits
+* **sapphyrus** - Images (viewtopic.php?id=22917) and HTTP (viewtopic.php?id=19253) libraries.
+* **halflifefan** - Modified some code from his post for the blockbot (viewtopic.php?id=10839).
+* **pilot** - Displaying how to remove a material with the material system (viewtopic.php?id=31518) *no code used*.
+* **duke** - Displaying out to interact with the playerlist (viewtopic.php?id=19293) *no code used*.
+* **wish** - Stole ESP preview idea from him, was made before any of the new preview lua posts *no code used*.
