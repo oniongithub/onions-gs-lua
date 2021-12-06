@@ -1260,26 +1260,31 @@ local onionESPPreview = {
     control = ui.new_checkbox("Visuals", "Player ESP", "Preview"), previewImage
 }
 
-http.get("https://i.imgur.com/TdY2kCd.png", function(status, response)
-    if (status and response.status == 200) then
-        onionESPPreview.previewImage = images.load_png(response.body)
-    end
-end)
+if (images) then
+    http.get("https://i.imgur.com/TdY2kCd.png", function(status, response)
+        if (status and response and response.status == 200) then
+            onionESPPreview.previewImage = images.load_png(response.body)
+        end
+    end)
+end
 
 windows.add("espPreview", window(20, 20, 250, 400, "", {menuR, menuG, menuB, menuA}, windows.styles.default, true))
 
 local function previewPaint() -- Draw the esp preview and check each control's state and color
     local win = windows.get("espPreview")
 
-    if (ui.is_menu_open() and ui.get(onionESPPreview.control) and onionESPPreview.previewImage ~= nil) then
+    if (ui.is_menu_open() and ui.get(onionESPPreview.control)) then
         win.visible = true
         win.x, win.y = menuPos.x - ((win.w + 8) * dpi), menuPos.y + ((menuSize.y / 2) - ((win.h * dpi) / 2))
-        local imageW, imageH, percent = onionESPPreview.previewImage:measure()
-        if (imageW > imageH) then percent = 300 / imageW else percent = 300 / imageH end
-        imageW, imageH = (imageW * percent) * dpi, (imageH * percent) * dpi
-        local imageX, imageY = win.x + ((win.w * dpi) / 2) - (imageW / 2), win.y + ((win.h * dpi) / 2) - (imageH / 2)
+        local imageW, imageH, imageX, imageY = 0, 0, 0, 0
+        if (images and onionESPPreview.previewImage) then
+            imageW, imageH, percent = onionESPPreview.previewImage:measure()
+            if (imageW > imageH) then percent = 300 / imageW else percent = 300 / imageH end
+            imageW, imageH = (imageW * percent) * dpi, (imageH * percent) * dpi
+            imageX, imageY = win.x + ((win.w * dpi) / 2) - (imageW / 2), win.y + ((win.h * dpi) / 2) - (imageH / 2)
 
-        onionESPPreview.previewImage:draw(imageX, imageY, nil, 300 * dpi)
+            onionESPPreview.previewImage:draw(imageX, imageY, nil, 300 * dpi)
+        end
         local usedY = 0
 
         if (ui.get(guiReferences.espBounding[1])) then drawBox(imageX - 8, imageY - 8, imageW + 16, imageH + 16, true, guiReferences.espBounding[2]) end
