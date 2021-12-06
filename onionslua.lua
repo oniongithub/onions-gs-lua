@@ -1,5 +1,5 @@
 local ffi, vector, http, images = require("ffi"), require("vector"), require("gamesense/http"), require("gamesense/images")
-local init, localPlayer, mousePos, dpi, version = true, entity.get_local_player(), nil, nil, "7goOwdgwDBIH5xCu"
+local init, localPlayer, mousePos, dpi, version = true, entity.get_local_player(), nil, nil, "wp6hmxrsGbeTUQE6"
 local menuR, menuG, menuB, menuA = ui.get(ui.reference("Misc", "Settings", "Menu color"))
 local screenSize, menuPos, menuSize = vector(client.screen_size()), vector(ui.menu_position()), vector(ui.menu_size())
 
@@ -1303,7 +1303,7 @@ local onionVoteLog = {
 }
 
 local function voteRevealEvent(event) -- Run a notification and print when a player votes
-    if (ui.get(onionVoteLog)) then
+    if (ui.get(onionVoteLog.control)) then
         local voteEntity, vote, voteBool = event.entityid, event.vote_option, nil
         local voteEntityName = entity.get_player_name(voteEntity)
 
