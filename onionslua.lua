@@ -540,6 +540,14 @@ if (disabledReferences ~= nil and #disabledReferences > 0) then -- Sets all the 
     notification("UI has been initialized.", 2500, {menuR, menuG, menuB, menuA}, 4, 1):run()
 end
 
+client.set_event_callback("shutdown", function()
+    if (disabledReferences ~= nil and #disabledReferences > 0) then -- Makes removed controls visible again after unloading.
+        for i = 1, #disabledReferences do          
+            ui.set_visible(disabledReferences[i].reference, true)
+        end
+    end
+end);
+
 local output = http.get("https://raw.githubusercontent.com/oniongithub/onions-gs-lua/main/version", function(status, response)
     if (status and response.status == 200) then
         local body = response.body:gsub("\n", "")
