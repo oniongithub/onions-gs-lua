@@ -55,3 +55,4 @@
 * **pilot** - Displaying how to remove a material with the material system (viewtopic.php?id=31518) *no code used*.
 * **duke** - Displaying out to interact with the playerlist (viewtopic.php?id=19293) *no code used*.
 * **wish** - Stole ESP preview idea from him, was made before any of the new preview lua posts *no code used*.
+* **north, pasteuser, and neplo** - Giving me ideas when I didn't know what else to add *no code used*.
