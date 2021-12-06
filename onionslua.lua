@@ -388,11 +388,7 @@ function windows.runPaint()
                     renderer.rectangle(hudWindows[i].window.x, hudWindows[i].window.y, hudWindows[i].window.w * dpi, 2 * dpi, hudWindows[i].window.color[1], hudWindows[i].window.color[2], hudWindows[i].window.color[3], 255)
                     renderer.rectangle(hudWindows[i].window.x, hudWindows[i].window.y + (2 * dpi), hudWindows[i].window.w * dpi, (hudWindows[i].window.h * dpi) - (2 * dpi), 35, 35, 35, 180)
                 else
-                    -- drawing from wish
-                    local c = { 10, 60, 40, 40, 40, 60, 20 }
-                    for i = 0, 6, 1 do
-                        renderer.rectangle(hudWindows[i].window.x + i, hudWindows[i].window.y + i, hudWindows[i].window.w * dpi - (i * 2), hudWindows[i].window.h * dpi - (i * 2), c[i + 1], c[i + 1], c[i + 1], 255)
-                    end
+                    -- unused
                 end
             end
         end
@@ -703,18 +699,20 @@ local onionExtrapolation = {
 }
 
 local function extrapolatedPosition() -- just get current max charge and do some magical math to get an inaccurate answer (also server tickrate is hardcoded smd)
-    if (ui.get(guiReferences.doubletap[1]) and ui.get(guiReferences.doubletap[2])) then
-        local percent = (16 - ui.get(guiReferences.dtFakelag)) / 64
-        local velX, velY, velZ = entity.get_prop(localPlayer, "m_vecVelocity")
-        local originX, originY, originZ = entity.get_origin(localPlayer)
-        local endX, endY = originX + velX * percent, originY + velY * percent
+    if (ui.get(onionExtrapolation.control)) then
+        if (ui.get(guiReferences.doubletap[1]) and ui.get(guiReferences.doubletap[2])) then
+            local percent = (16 - ui.get(guiReferences.dtFakelag)) / 64
+            local velX, velY, velZ = entity.get_prop(localPlayer, "m_vecVelocity")
+            local originX, originY, originZ = entity.get_origin(localPlayer)
+            local endX, endY = originX + velX * percent, originY + velY * percent
 
-        local drawColor = { r = 255, g = 255, b = 255, a = 150 }
-        if (ui.get(onionHolidays.control) ~= "None") then
-            drawColor= { r = onionHolidays.globalColor[1], g = onionHolidays.globalColor[2], b = onionHolidays.globalColor[3], a = 150 }
+            local drawColor = { r = 255, g = 255, b = 255, a = 150 }
+            if (ui.get(onionHolidays.control) ~= "None") then
+                drawColor= { r = onionHolidays.globalColor[1], g = onionHolidays.globalColor[2], b = onionHolidays.globalColor[3], a = 150 }
+            end
+
+            draw3D({ x = endX, y = endY, z = originZ }, 8, drawColor, true, objects.circle)
         end
-
-        draw3D({ x = endX, y = endY, z = originZ }, 8, drawColor, true, objects.circle)
     end
 end
 
@@ -1558,7 +1556,7 @@ client.set_event_callback("paint_ui", function()
         if (not init) then
             runRainbow()
             if (ui.get(onionBlockbot.control)) then blockbotPaint() else onionBlockbot.table.isOn = false end
-            if (ui.get(onionExtrapolation.control)) then extrapolatedPosition() end
+            extrapolatedPosition()
             crosshairPaint()
             espDistancePaint()
             hitmarkerPaint()
