@@ -37,7 +37,7 @@
 * **Vote Revealer** - Reveals the name of voters and what they voted for.
 * **Current Time** - Displays your current time on the top right (cause fuck windows 11 for removing multi monitor time :().
 * **Blockbot** - Replaces the original blockbot and allows you to blockbot on the ground and ontop of players.
-* **Christmas Mode** - Replaces applicable colors with Christmas colors for the holidays. :)
+* **Holiday Mode** - Replaces applicable colors with the selected holiday colors. :)
 * **Clean Console** - Filters out CS:GO garbage from the console.
 * **Console Luas** - Allows you to execute Luas in the console, ex: (loadstring print("test")).
 
