@@ -49,7 +49,7 @@
 * **Steal Clantag** - Steals a player's clantag.
 * **Dump Wins** - Dumps a player's competitive wins.
 
-#Credits
+# Credits
 * **sapphyrus** - Images (viewtopic.php?id=22917) and HTTP (viewtopic.php?id=19253) libraries.
 * **halflifefan** - Modified some code from his post for the blockbot (viewtopic.php?id=10839).
 * **pilot** - Displaying how to remove a material with the material system (viewtopic.php?id=31518) *no code used*.
