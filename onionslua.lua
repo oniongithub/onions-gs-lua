@@ -555,29 +555,42 @@ local output = http.get("https://raw.githubusercontent.com/oniongithub/onions-gs
 end)
 
 --[[
-    Christmas Mode
+    Holiday Mode
 --]]
 
-local onionChristmas = {
-    control = ui.new_checkbox("Misc", "Settings", "Christmas mode"),
+local onionHolidays = {
+    control = ui.new_combobox("Misc", "Settings", "Holiday mode", "None", "Christmas", "Halloween", "Hanukkah"),
     time = client.UnixTime(), switch = false, globalColor = {255, 255, 255, 255},
-    colors = { {49, 235, 55, 255}, {245, 64, 82, 255} }
+    colors = { {255, 255, 255, 255}, {255, 255, 255, 255} }
 }
 
-local function runRainbow()
-    if (ui.get(onionChristmas.control)) then
-        local christmasPercent = (client.UnixTime() - onionChristmas.time) / 2500
-        local newPercent = easingWidth(3, 1, christmasPercent)
+ui.set_callback(onionHolidays.control, function()
+    local value = ui.get(onionHolidays.control);
+    if (value ~= "None") then
+        if (value == "Christmas") then
+            onionHolidays.colors = { {49, 235, 55, 255}, {245, 64, 82, 255} };
+        elseif (value == "Halloween") then
+            onionHolidays.colors = { {245, 135, 66, 255}, {0, 0, 0, 255} };
+        elseif (value == "Hanukkah") then
+            onionHolidays.colors = { {66, 149, 245, 255}, {255, 255, 255, 255} };
+        end
+    end
+end)
 
-        if (onionChristmas.switch) then
-            onionChristmas.globalColor = {numberToNumber(49, 245, newPercent), numberToNumber(235, 64, newPercent), numberToNumber(55, 82, newPercent), 255}
+local function runRainbow()
+    if (ui.get(onionHolidays.control) ~= "None") then
+        local holidayPercent = (client.UnixTime() - onionHolidays.time) / 2500
+        local newPercent = easingWidth(3, 1, holidayPercent)
+
+        if (onionHolidays.switch) then
+            onionHolidays.globalColor = {numberToNumber(onionHolidays.colors[1][1], onionHolidays.colors[2][1], newPercent), numberToNumber(onionHolidays.colors[1][2], onionHolidays.colors[2][2], newPercent), numberToNumber(onionHolidays.colors[1][3], onionHolidays.colors[2][3], newPercent), 255}
         else
-            onionChristmas.globalColor = {numberToNumber(245, 49, newPercent), numberToNumber(64, 235, newPercent), numberToNumber(82, 55, newPercent), 255}
+            onionHolidays.globalColor = {numberToNumber(onionHolidays.colors[2][1], onionHolidays.colors[1][1], newPercent), numberToNumber(onionHolidays.colors[2][2], onionHolidays.colors[1][2], newPercent), numberToNumber(onionHolidays.colors[2][3], onionHolidays.colors[1][3], newPercent), 255}
         end
 
-        if (christmasPercent > 1) then
-            onionChristmas.switch = not onionChristmas.switch
-            onionChristmas.time = client.UnixTime()
+        if (holidayPercent > 1) then
+            onionHolidays.switch = not onionHolidays.switch
+            onionHolidays.time = client.UnixTime()
         end
     end
 end
@@ -697,8 +710,8 @@ local function extrapolatedPosition() -- just get current max charge and do some
         local endX, endY = originX + velX * percent, originY + velY * percent
 
         local drawColor = { r = 255, g = 255, b = 255, a = 150 }
-        if (ui.get(onionChristmas.control)) then
-            drawColor= { r = onionChristmas.globalColor[1], g = onionChristmas.globalColor[2], b = onionChristmas.globalColor[3], a = 150 }
+        if (ui.get(onionHolidays.control) ~= "None") then
+            drawColor= { r = onionHolidays.globalColor[1], g = onionHolidays.globalColor[2], b = onionHolidays.globalColor[3], a = 150 }
         end
 
         draw3D({ x = endX, y = endY, z = originZ }, 8, drawColor, true, objects.circle)
@@ -1017,8 +1030,8 @@ local function hitmarkerEvent(event) -- add hitmarker information to a table to 
                 end
             end
             
-            if (ui.get(onionChristmas.control)) then
-                table.insert(onionHitmarker.hitTable, { endVec, globals.curtime(), onionHitmarker.hitWords[client.random_int(1, #onionHitmarker.hitWords)], onionChristmas.colors[client.random_int(1, #onionChristmas.colors)]})
+            if (ui.get(onionHolidays.control) ~= "None") then
+                table.insert(onionHitmarker.hitTable, { endVec, globals.curtime(), onionHitmarker.hitWords[client.random_int(1, #onionHitmarker.hitWords)], onionHolidays.colors[client.random_int(1, #onionHolidays.colors)]})
             else
                 table.insert(onionHitmarker.hitTable, { endVec, globals.curtime(), onionHitmarker.hitWords[client.random_int(1, #onionHitmarker.hitWords)], onionHitmarker.wordColors[client.random_int(1, #onionHitmarker.wordColors)] })
             end
@@ -1382,8 +1395,8 @@ local function drawGridSquarePos(ent, gridSize, addY, addX) -- Calculate box pos
             
             local r, g, b, a = ui.get(onionGrid.colorControl)
 
-            if (ui.get(onionChristmas.control)) then
-                r, g, b, a = table.unpack(onionChristmas.globalColor) a = 120
+            if (ui.get(onionHolidays.control) ~= "None") then
+                r, g, b, a = table.unpack(onionHolidays.globalColor) a = 120
             end
 
             renderer.line(x3, y3, x4, y4, r, g, b, 255)
@@ -1459,12 +1472,12 @@ local function runPlayerParticles()
 
             if (dropletVec2.x >= 0 and dropletVec2.x <= screenSize.x and dropletVec2.y >= 0 and dropletVec2.y <= screenSize.y) then
                 if (droplet2Vec2.x >= 0 and droplet2Vec2.x <= screenSize.x and droplet2Vec2.y >= 0 and droplet2Vec2.y <= screenSize.y) then
-                    if (not ui.get(onionChristmas.control)) then
+                    if (ui.get(onionHolidays.control) == "None") then
                         renderer.line(dropletVec2.x, dropletVec2.y, droplet2Vec2.x, droplet2Vec2.y, ui.get(onionWeather.colorControl))
                     elseif (onionWeather.cache[i].color == 1) then
-                        renderer.line(dropletVec2.x, dropletVec2.y, droplet2Vec2.x, droplet2Vec2.y, onionChristmas.colors[1][1], onionChristmas.colors[1][2], onionChristmas.colors[1][3], 255)
+                        renderer.line(dropletVec2.x, dropletVec2.y, droplet2Vec2.x, droplet2Vec2.y, onionHolidays.colors[1][1], onionHolidays.colors[1][2], onionHolidays.colors[1][3], 255)
                     elseif (onionWeather.cache[i].color == 2) then
-                        renderer.line(dropletVec2.x, dropletVec2.y, droplet2Vec2.x, droplet2Vec2.y, onionChristmas.colors[2][1], onionChristmas.colors[2][2], onionChristmas.colors[2][3], 255)
+                        renderer.line(dropletVec2.x, dropletVec2.y, droplet2Vec2.x, droplet2Vec2.y, onionHolidays.colors[2][1], onionHolidays.colors[2][2], onionHolidays.colors[2][3], 255)
                     end
                 end
             end
