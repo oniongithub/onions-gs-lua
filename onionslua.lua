@@ -1,5 +1,5 @@
 local ffi, vector, http, images = require("ffi"), require("vector"), require("gamesense/http"), require("gamesense/images")
-local init, localPlayer, mousePos, dpi, version = true, entity.get_local_player(), nil, nil, "wp6hmxrsGbeTUQE6"
+local init, localPlayer, mousePos, dpi, version = true, entity.get_local_player(), nil, nil, "CORJlaAawEza6N2f"
 local menuR, menuG, menuB, menuA = ui.get(ui.reference("Misc", "Settings", "Menu color"))
 local screenSize, menuPos, menuSize = vector(client.screen_size()), vector(ui.menu_position()), vector(ui.menu_size())
 
@@ -549,7 +549,7 @@ client.set_event_callback("shutdown", function()
 end);
 
 local output = http.get("https://raw.githubusercontent.com/oniongithub/onions-gs-lua/main/version", function(status, response)
-    if (status and response.status == 200) then
+    if (status and response and response.status == 200 and type(response.body) == "string") then
         local body = response.body:gsub("\n", "")
         if (body ~= version) then
             local text = "There is a new update available at https://github.com/oniongithub/onions-gs-lua"
