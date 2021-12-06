@@ -907,8 +907,8 @@ local function playerKilledEvent(event) -- Run killsay for every player when att
             if (value == "On") then
                 client.exec("say " .. onionKillsay.killMessages[client.random_int(1, #onionKillsay.killMessages)])
             else
-                ui.set(playerListRef, attacked)
-                if (contains(playerListControls[2].table, ui.get(playerListRef))) then 
+                ui.set(guiReferences.playerList, attacked)
+                if (contains(playerListControls[2].table, ui.get(guiReferences.playerList))) then 
                     client.exec("say " .. onionKillsay.killMessages[client.random_int(1, #onionKillsay.killMessages)])
                 end
             end
@@ -948,8 +948,8 @@ local function repeatTextEvent(chat) -- Run repeat text for every player when at
             if (value == "On") then
                 client.exec("say " .. text)
             else
-                ui.set(playerListRef, writer)
-                if (contains(playerListControls[3].table, ui.get(playerListRef))) then 
+                ui.set(guiReferences.playerList, writer)
+                if (contains(playerListControls[3].table, ui.get(guiReferences.playerList))) then 
                     client.exec("say " .. text)
                 end
             end
