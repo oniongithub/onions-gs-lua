@@ -1009,7 +1009,8 @@ local onionHitmarker = {
         {4, 19}, {5, 17}, {6, 11}, 
         {7, 10}, {nil, 5}
     }, hitWords = { "OWNED", "OOF", "SMASH", "BOOM" },
-    wordsColors = {{35, 70, 226}, {49, 124, 225}, {217, 226, 0}, {65, 222, 91}, {221, 124, 30}}
+    wordsColors = {{35, 70, 226}, {49, 124, 225}, {217, 226, 0}, {65, 222, 91}, {221, 124, 30}},
+    holidaySwitch = false
 }
 
 local function hitmarkerEvent(event) -- add hitmarker information to a table to grab from our paint callback
@@ -1031,7 +1032,13 @@ local function hitmarkerEvent(event) -- add hitmarker information to a table to 
             end
             
             if (ui.get(onionHolidays.control) ~= "None") then
-                table.insert(onionHitmarker.hitTable, { endVec, globals.curtime(), onionHitmarker.hitWords[client.random_int(1, #onionHitmarker.hitWords)], onionHolidays.colors[client.random_int(1, #onionHolidays.colors)]})
+                if (holidaySwitch) then
+                    table.insert(onionHitmarker.hitTable, { endVec, globals.curtime(), onionHitmarker.hitWords[client.random_int(1, #onionHitmarker.hitWords)], onionHolidays.colors[1]})
+                else
+                    table.insert(onionHitmarker.hitTable, { endVec, globals.curtime(), onionHitmarker.hitWords[client.random_int(1, #onionHitmarker.hitWords)], onionHolidays.colors[2]})
+                end
+
+                holidaySwitch = not holidaySwitch
             else
                 table.insert(onionHitmarker.hitTable, { endVec, globals.curtime(), onionHitmarker.hitWords[client.random_int(1, #onionHitmarker.hitWords)], onionHitmarker.wordColors[client.random_int(1, #onionHitmarker.wordColors)] })
             end
@@ -1521,6 +1528,9 @@ local function drawCurrentTime()
         end
 
         local r, g, b, a = ui.get(onionCurrentTime.controlColor)
+        if (ui.get(onionHolidays.control) ~= "None") then
+            r, g, b = onionHolidays.globalColor[1], onionHolidays.globalColor[2], onionHolidays.globalColor[3]
+        end
 
         local textSize = vector(renderer.measure_text("d", timeText))
         renderer.text(screenSize.x - 8 * dpi - textSize.x, 8 * dpi, r, g, b, a, "d", 0, timeText)
