@@ -933,7 +933,7 @@ local function repeatTextEvent(chat) -- Run repeat text for every player when at
     local writer = chat.entity
 
     if (writer ~= localPlayer) then
-        local value = ui.get(onionRepeatText.control) local text = chat.text
+        local value = ui.get(onionRepeatText.control) local text = chat.text:gsub(";", "")
         if (string.sub(text, 1, 1) == "/" or string.sub(text, 1, 1) == "!") then
             text = string.sub(text, 2, #text)
         end
