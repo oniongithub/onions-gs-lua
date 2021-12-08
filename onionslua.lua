@@ -452,8 +452,10 @@ local function easingWidth(easing, width, percent) -- https://easings.net/
     return width - (width * percent)
 end
 
+local onionNotifications = ui.new_checkbox("Misc", "Settings", "Disable notifications")
+
 local function notificationPaint()
-    if (#notifications > 0) then
+    if (#notifications > 0 and not ui.get(onionNotifications)) then
         local usedY = { tl = 0, tr = 0, bl = 0, br = 0 }
 
         for i = #notifications, 1, -1 do
@@ -770,24 +772,27 @@ local onionAdverts = {
 }
 
 local function removeAdvertisement() -- remove all materials related to the table above, material strings stolen from pilot's post viewtopic.php?id=31518
-    onionAdverts.materialAds = {}
+    if (localPlayer ~= nil and entity.is_alive(localPlayer)) then
+        onionAdverts.materialAds = {}
 
-    for i = 1, #onionAdverts.adStrings do
-        local material = materialsystem.find_materials(onionAdverts.adStrings[i])
-        if (material ~= nil) then table.insert(onionAdverts.materialAds, material) end
-    end
+        for i = 1, #onionAdverts.adStrings do
+            local material = materialsystem.find_materials(onionAdverts.adStrings[i])
+            if (material ~= nil) then table.insert(onionAdverts.materialAds, material) end
+        end
 
-    if (#onionAdverts.materialAds > 0) then
-        for i = 1, #onionAdverts.materialAds do
-            for f = 1, #onionAdverts.materialAds[i] do
-                onionAdverts.materialAds[i][f]:set_material_var_flag(2, ui.get(onionAdverts.control))
+        if (#onionAdverts.materialAds > 0) then
+            for i = 1, #onionAdverts.materialAds do
+                for f = 1, #onionAdverts.materialAds[i] do
+                    onionAdverts.materialAds[i][f]:set_material_var_flag(2, ui.get(onionAdverts.control))
+                end
             end
         end
+
+        notification("Added map advertisements have been cleared.", 1500, {menuR, menuG, menuB, menuA}, 4, 1):run()
     end
 end
 
 ui.set_callback(onionAdverts.control, removeAdvertisement)
-removeAdvertisement()
 
 --[[
     Hideshots Indicator
@@ -879,6 +884,8 @@ local function selectTeamEvent(event)
             else
                 client.exec("jointeam 2 1")
             end
+
+            notification("You have automatically been put into the " .. value .. "s,", 1500, {menuR, menuG, menuB, menuA}, 4, 1):run()
         end
     end
 end
@@ -1195,28 +1202,54 @@ end
 
 local onionBuybot = {
     enableControl = ui.new_checkbox("Misc", "Miscellaneous", "Buybot"),
-    textControl = ui.new_textbox("Misc", "Miscellaneous", "Buybot")
+    buttonControl,
+    buybotControls = {
+        ui.new_combobox("Misc", "Miscellaneous", "Primary", "None", "Rifle", "Auto", "Scout", "AWP"),
+        ui.new_combobox("Misc", "Miscellaneous", "Primary", "None", "Usp_silencer", "Glock", "Deagle"),
+        ui.new_multiselect("Misc", "Miscellaneous", "Primary", "Taser", "Molotov", "Incgrenade", "Smokegrenade", "Hegrenade", "Flashbang") 
+    }, visible = true
 }
 
-local function buybotCallback() ui.set_visible(onionBuybot.textControl, ui.get(onionBuybot.enableControl)) end
-ui.set_callback(onionBuybot.enableControl, buybotCallback) buybotCallback()
+local function buybotCallback(disable)
+    onionBuybot.visible = not onionBuybot.visible local visible = onionBuybot.visible
+
+    if (disable ~= nil) then 
+        visible = not disable
+        ui.set_visible(onionBuybot.buttonControl, visible)
+    end
+
+    for i = 1, #onionBuybot.buybotControls do
+        ui.set_visible(onionBuybot.buybotControls[i], visible)
+    end
+end
+
+onionBuybot.buttonControl = ui.new_button("Misc", "Miscellaneous", "Buybot Settings", function() buybotCallback(nil) end)
+ui.set_callback(onionBuybot.enableControl, function() buybotCallback(not ui.get(onionBuybot.enableControl)) end)
+if (not ui.get(onionBuybot.enableControl)) then buybotCallback(true) end
 
 local function onNewRoundEvent(event) -- buy on new round event, same as buy console command (buy awp buy ak47 etc)
     if (ui.get(onionBuybot.enableControl)) then
-        local buybotText = ui.get(onionBuybot.textControl)
-        local buybotLines = {}
+        local buybotText = ""
+        if (ui.get(onionBuybot.buybotControls[1]) ~= "None") then
+            local value = ui.get(onionBuybot.buybotControls[1]);
 
-        for str in buybotText:gmatch("[^ ]+") do
-            table.insert(buybotLines, str)
+            if (value == "Rifle") then buybotText = buybotText .. "buy ak47; " 
+            elseif (value == "Auto") then buybotText = buybotText .. "buy scar20; "
+            elseif (value == "Scout") then buybotText = buybotText .. "buy ssg08; "
+            elseif (value == "AWP") then buybotText = buybotText .. "buy awp; " end
         end
 
-        local endText = ""
+        local secondaryValue = ui.get(onionBuybot.buybotControls[2]);
+        if (secondaryValue ~= "None") then buybotText = buybotText .. "buy " .. string.lower(secondaryValue) .. "; " end
 
-        for i = 1, #buybotLines do
-            endText = endText .. "buy " .. buybotLines[i] .. " " 
+        local extrasTable = ui.get(onionBuybot.buybotControls[3]);
+        if (extrasTable ~= nil and #extrasTable > 0) then
+            for i = 1, #extrasTable do
+                buybotText = buybotText .. "buy " .. string.lower(extrasTable[i]) .. "; "
+            end
         end
 
-        client.exec(endText)
+        client.exec(buybotText)
     end
 end
 
@@ -1512,6 +1545,8 @@ local function runConsoleLuas(str)
 
     if (startIndex and endIndex) then
         loadstring(string.sub(str.text, endIndex, #str.text))()
+
+        notification("Console Lua has been executed.", 1500, {menuR, menuG, menuB, menuA}, 4, 1):run()
     end
 end
 
