@@ -1035,7 +1035,9 @@ local function targettingPaint(disable)
             local hasValue = contains(playerListControls[4].table, ui.get(guiReferences.playerList))
             if (not ui.get(onionRagebotTarget.control)) then hasValue = true; end
             plist.set(players[i], "Add to whitelist", not hasValue);
-            ui.set(guiReferences.playerList, value)
+            if (value ~= nil) then
+                ui.set(guiReferences.playerList, value)
+            end
         end
     end
 end
