@@ -818,6 +818,7 @@ local playerListControls = {
     { table = {}, reference = ui.new_checkbox("Players", "Adjustments", "Blockbot priority") },
     { table = {}, reference = ui.new_checkbox("Players", "Adjustments", "Killsay target") },
     { table = {}, reference = ui.new_checkbox("Players", "Adjustments", "Repeat target") },
+    { table = {}, reference = ui.new_checkbox("Players", "Adjustments", "Ragebot target") },
 }
 
 local onionStealName = ui.new_button("Players", "Adjustments", "Steal username", function()
@@ -928,7 +929,7 @@ end
 --]]
 
 local onionRepeatText = {
-    control = ui.new_combobox("Misc", "Miscellaneous", "Repeat text", { "Off", "On", "Targetted" }),
+    control = ui.new_combobox("Misc", "Miscellaneous", "Repeat text", { "Off", "On", "Team Only", "Enemy Only", "Targetted" }),
     blacklistedCommands = { "rs", "rank", "top", "ban", "admin", "kick", "addban", "banip", "cancelvote",
                             "cvar", "execcfg", "help", "map", "rcon", "reloadadmins", "unban", "who", "beacon",
                             "burn", "chat", "csay", "gag", "hsay", "msay", "mute", "play", "psay", "rename",
@@ -939,7 +940,8 @@ local onionRepeatText = {
 local function repeatTextEvent(chat) -- Run repeat text for every player when attacking or for specified players in the plist
     local writer = chat.entity
 
-    if (writer ~= localPlayer) then
+    if (writer ~= localPlayer) then 
+
         local value = ui.get(onionRepeatText.control) local text = chat.text:gsub(";", "")
         if (string.sub(text, 1, 1) == "/" or string.sub(text, 1, 1) == "!") then
             text = string.sub(text, 2, #text)
@@ -952,7 +954,13 @@ local function repeatTextEvent(chat) -- Run repeat text for every player when at
         end
 
         if (value ~= "Off") then
-            if (value == "On") then
+            if (value ~= "Off" and value ~= "Targetted") then
+                if (value == "Team Only") then
+                    if (entity.is_enemy(writer)) then return end
+                elseif (value == "Enemy Only") then
+                    if (not entity.is_enemy(writer)) then return end
+                end
+
                 client.exec("say " .. text)
             else
                 ui.set(guiReferences.playerList, writer)
@@ -1006,6 +1014,28 @@ local function espDistancePaint() -- set plist settings when a player's origin i
                     plist.set(players[i], "Disable visuals", false)
                 end
             end
+        end
+    end
+end
+
+--[[
+    Ragebot Playerlist Targetting  
+--]]
+
+local onionRagebotTarget = {
+    control = ui.new_checkbox("Rage", "Aimbot", "Playerlist targetting")
+}
+
+local function targettingPaint(disable)
+    local players = entity.get_players(false)
+    if (players ~= nil and #players > 0) then
+        for i = 1, #players do
+            local value = ui.get(guiReferences.playerList);
+            ui.set(guiReferences.playerList, players[i])
+            local hasValue = contains(playerListControls[4].table, ui.get(guiReferences.playerList))
+            if (not ui.get(onionRagebotTarget.control)) then hasValue = true; end
+            plist.set(players[i], "Add to whitelist", not hasValue);
+            ui.set(guiReferences.playerList, value)
         end
     end
 end
@@ -1611,6 +1641,7 @@ client.set_event_callback("paint_ui", function()
             overridePaint()
             previewPaint()
             runGridESP()
+            targettingPaint()
             runPlayerParticles()
             drawCurrentTime()
             drawHideshotsIndicator()
