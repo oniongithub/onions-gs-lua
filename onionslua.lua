@@ -940,8 +940,7 @@ local onionRepeatText = {
 local function repeatTextEvent(chat) -- Run repeat text for every player when attacking or for specified players in the plist
     local writer = chat.entity
 
-    if (writer ~= localPlayer) then 
-
+    if (writer ~= localPlayer) then
         local value = ui.get(onionRepeatText.control) local text = chat.text:gsub(";", "")
         if (string.sub(text, 1, 1) == "/" or string.sub(text, 1, 1) == "!") then
             text = string.sub(text, 2, #text)
@@ -954,7 +953,7 @@ local function repeatTextEvent(chat) -- Run repeat text for every player when at
         end
 
         if (value ~= "Off") then
-            if (value ~= "Off" and value ~= "Targetted") then
+            if (value ~= "Targetted") then
                 if (value == "Team Only") then
                     if (entity.is_enemy(writer)) then return end
                 elseif (value == "Enemy Only") then
@@ -1675,8 +1674,12 @@ client.set_event_callback("player_chat", function(chat)
 end)
 
 client.set_event_callback("player_connect_full", function(e)
-    removeAdvertisement()
-    selectTeamEvent(e)
+    local ent = client.userid_to_entindex(e.userid)
+
+    if (ent == localPlayer) then
+        removeAdvertisement()
+        selectTeamEvent(e)
+    end
 end)
 
 client.set_event_callback("player_hurt", function(e)
