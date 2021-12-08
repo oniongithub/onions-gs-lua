@@ -1302,10 +1302,12 @@ local function overridePaint()
 end
 
 local function overrideMove()
-    if (ui.get(onionMinOverride.enableControl) and ui.get(onionMinOverride.keyControl)) then
-        ui.set(guiReferences.minimumDamage, ui.get(onionMinOverride.damageControl))
-    else
-        ui.set(guiReferences.minimumDamage, ui.get(onionMinOverride.restoreControl))
+    if (ui.get(onionMinOverride.enableControl)) then
+        if (ui.get(onionMinOverride.keyControl)) then
+            ui.set(guiReferences.minimumDamage, ui.get(onionMinOverride.damageControl))
+        else
+            ui.set(guiReferences.minimumDamage, ui.get(onionMinOverride.restoreControl))
+        end
     end
 end
 
