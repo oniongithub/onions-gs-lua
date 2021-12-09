@@ -49,6 +49,7 @@
 * **Steal Username** - Steals a player's username.
 * **Steal Clantag** - Steals a player's clantag.
 * **Dump Wins** - Dumps a player's competitive wins.
+* **Alias Logging** - Allows you to set a custom alias to players to be notified about when they connect.
 
 # Credits
 * **sapphyrus** - Images (viewtopic.php?id=22917) and HTTP (viewtopic.php?id=19253) libraries.
