@@ -9,6 +9,7 @@
 
 ## Ragebot
 * **Damage Override** - A keybind to override your minimum damage quickly.
+* **Playerlist Targetting** - Only ragebot a player if ragebot targetting is enabled in the player list.
 
 ## Anti-Aim
 * **Fake Flick** - Some cheats dump it, not very useful though.
