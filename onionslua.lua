@@ -869,7 +869,7 @@ local function runPlayerAliases(player)
         local alias = getPlayerAlias(player)
         if (alias) then
             local text = "An aliased player " .. alias .. ", has been found. Their logged in as " .. entity.get_player_name(player) .. "."
-            notification(text, 1500, {menuR, menuG, menuB, menuA}, 4, 1):run() print(text)
+            notification(text, 4000, {menuR, menuG, menuB, menuA}, 4, 1):run() print(text)
         end
     else
         local entities = entity.get_players(false);
@@ -880,7 +880,7 @@ local function runPlayerAliases(player)
                 
                 if (alias) then
                     local text = "An aliased player " .. alias .. ", has been found. Their logged in as " .. entity.get_player_name(entities[i]) .. "."
-                    notification(text, 1500, {menuR, menuG, menuB, menuA}, 4, 1):run() print(text)
+                    notification(text, 4000, {menuR, menuG, menuB, menuA}, 4, 1):run() print(text)
                 end
             end
         end
