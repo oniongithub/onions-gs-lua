@@ -1,5 +1,5 @@
 local ffi, vector, http, images = require("ffi"), require("vector"), require("gamesense/http"), require("gamesense/images")
-local init, localPlayer, mousePos, dpi, version = true, entity.get_local_player(), nil, nil, "1XYcQYRO7c5gn0kx"
+local init, localPlayer, mousePos, dpi, version = true, entity.get_local_player(), nil, nil, "F5xeRREFidCQVXcG"
 local menuR, menuG, menuB, menuA = ui.get(ui.reference("Misc", "Settings", "Menu color"))
 local screenSize, menuPos, menuSize = vector(client.screen_size()), vector(ui.menu_position()), vector(ui.menu_size())
 
@@ -811,6 +811,83 @@ local function drawHideshotsIndicator()
 end
 
 --[[
+    Player Logging Functions
+--]]
+
+local function setPlayerAlias(player, alias)
+    if (player and alias) then
+        local steamid, found = entity.get_steam64(player), false
+        local dbTable = database.read("onionPlayerAliases")
+
+        if (dbTable and #dbTable > 0) then
+            for i = 1, #dbTable do
+                if (dbTable[i].steamid == steamid) then
+                    table.remove(dbTable, i) found = true
+                    table.insert(dbTable, {steamid = steamid, alias = alias})
+                    database.write("onionPlayerAliases", dbTable)
+                end
+            end
+
+            if (not found) then
+                table.insert(dbTable, {steamid = steamid, alias = alias})
+                database.write("onionPlayerAliases", dbTable)
+            end
+        else
+            database.write("onionPlayerAliases", {{steamid = steamid, alias = alias}});
+        end
+    end
+end
+
+local function getPlayerAlias(player, remove)
+    if (player) then
+        local steamid = entity.get_steam64(player)
+        local dbTable = database.read("onionPlayerAliases")
+
+        if (dbTable and #dbTable > 0) then
+            for i = 1, #dbTable do
+                if (dbTable[i].steamid == steamid) then
+
+                    if (remove) then
+                        table.remove(dbTable, i)
+                        database.write("onionPlayerAliases", dbTable)
+                        return
+                    else
+                        return dbTable[i].alias
+                    end
+                end
+            end
+        end
+    end
+end
+
+local function removePlayerAlias(player)
+    getPlayerAlias(player, true);
+end
+
+local function runPlayerAliases(player)
+    if (player) then
+        local alias = getPlayerAlias(player)
+        if (alias) then
+            local text = "An aliased player " .. alias .. ", has been found. Their logged in as " .. entity.get_player_name(player) .. "."
+            notification(text, 1500, {menuR, menuG, menuB, menuA}, 4, 1):run() print(text)
+        end
+    else
+        local entities = entity.get_players(false);
+
+        if (entities and #entities > 0) then
+            for i = 1, #entities do
+                local alias = getPlayerAlias(entities[i]);
+                
+                if (alias) then
+                    local text = "An aliased player " .. alias .. ", has been found. Their logged in as " .. entity.get_player_name(entities[i]) .. "."
+                    notification(text, 1500, {menuR, menuG, menuB, menuA}, 4, 1):run() print(text)
+                end
+            end
+        end
+    end
+end
+
+--[[
     Player List Functions
 --]]
 
@@ -846,6 +923,28 @@ local onionDumpWins = ui.new_button("Players", "Adjustments", "Dump wins", funct
     ]])()
 
     print(wins)
+end)
+
+local onionAliasText = ui.new_textbox("Players", "Adjustments", "Player alias")
+local onionAliasSet = ui.new_button("Players", "Adjustments", "Set alias", function()
+    local player = ui.get(guiReferences.playerList)
+    setPlayerAlias(player, ui.get(onionAliasText))
+    print("Alias has been set.")
+end)
+
+local onionAliasGet = ui.new_button("Players", "Adjustments", "Get alias", function()
+    local player = ui.get(guiReferences.playerList)
+    local alias = getPlayerAlias(player)
+    if (alias and alias ~= "") then
+        print(alias)
+    else
+        print("No alias has been found.")
+    end
+end)
+
+local onionAliasRemove = ui.new_button("Players", "Adjustments", "Remove alias", function()
+    local player = ui.get(guiReferences.playerList)
+    removePlayerAlias(player)
 end)
 
 for i = 1, #playerListControls do -- modification of duke's post using tables so we don't need repetitive code viewtopic.php?id=19293
@@ -1681,6 +1780,9 @@ client.set_event_callback("player_connect_full", function(e)
     if (ent == localPlayer) then
         removeAdvertisement()
         selectTeamEvent(e)
+        runPlayerAliases()
+    else
+        runPlayerAliases(ent)
     end
 end)
 
