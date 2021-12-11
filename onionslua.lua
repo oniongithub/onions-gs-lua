@@ -554,7 +554,7 @@ end);
 local output = http.get("https://raw.githubusercontent.com/oniongithub/onions-gs-lua/main/version", function(status, response)
     if (status and response and response.status == 200 and type(response.body) == "string") then
         local body = response.body:gsub("\n", "")
-        if (body ~= version) then
+        if (not string.find(body, version)) then
             local text = "There is a new update available at https://github.com/oniongithub/onions-gs-lua"
             notification(text, 6000, {menuR, menuG, menuB, menuA}, 4, 1):run() print(text)
         end
