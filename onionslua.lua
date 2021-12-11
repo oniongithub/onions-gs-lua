@@ -1,5 +1,5 @@
 local ffi, vector, http, images = require("ffi"), require("vector"), require("gamesense/http"), require("gamesense/images")
-local init, localPlayer, mousePos, dpi, version = true, entity.get_local_player(), nil, nil, "F5xeRREFidCQVXcG"
+local init, localPlayer, mousePos, dpi, version = true, entity.get_local_player(), nil, nil, "2Y04Y2PrIW06pTrH"
 local menuR, menuG, menuB, menuA = ui.get(ui.reference("Misc", "Settings", "Menu color"))
 local screenSize, menuPos, menuSize = vector(client.screen_size()), vector(ui.menu_position()), vector(ui.menu_size())
 
@@ -387,6 +387,7 @@ function windows.runPaint()
                 if (hudWindows[i].window.styling == 1) then
                     renderer.rectangle(hudWindows[i].window.x, hudWindows[i].window.y, hudWindows[i].window.w * dpi, 2 * dpi, hudWindows[i].window.color[1], hudWindows[i].window.color[2], hudWindows[i].window.color[3], 255)
                     renderer.rectangle(hudWindows[i].window.x, hudWindows[i].window.y + (2 * dpi), hudWindows[i].window.w * dpi, (hudWindows[i].window.h * dpi) - (2 * dpi), 35, 35, 35, 180)
+                    renderer.blur(hudWindows[i].window.x, hudWindows[i].window.y + (2 * dpi), hudWindows[i].window.w * dpi, (hudWindows[i].window.h * dpi) - (2 * dpi), 255, 255, 255, 255)
                 else
                     -- unused
                 end
