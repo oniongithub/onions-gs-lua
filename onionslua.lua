@@ -1,5 +1,5 @@
 local ffi, vector, http, images = require("ffi"), require("vector"), require("gamesense/http"), require("gamesense/images")
-local init, localPlayer, mousePos, dpi, version = true, entity.get_local_player(), nil, nil, "4q02EIO1cg7qRcAK"
+local init, localPlayer, mousePos, dpi, version = true, entity.get_local_player(), nil, nil, "ov31MLwdqcIu9qIy"
 local menuR, menuG, menuB, menuA = ui.get(ui.reference("Misc", "Settings", "Menu color"))
 local screenSize, menuPos, menuSize = vector(client.screen_size()), vector(ui.menu_position()), vector(ui.menu_size())
 
@@ -18,6 +18,12 @@ local flags = {
     onground = 1, ducking = 2, waterjump = 3,
     ontrain = 4, inrain = 5, frozen = 6,
     atcontrols = 7, client = 8, fakeclient = 9, inwater = 10
+}
+
+local hitgroups = {
+    "Generic", "Head", "Chest", "Stomach",
+    "Left Arm", "Right Arm", "Left Leg",
+    "Right Leg", "Neck", "Unknown", "Gear"
 }
 
 --[[
@@ -562,6 +568,8 @@ local guiReferences = {
     espMoney = ui.reference("Visuals", "Player ESP", "Money"),
     minimumDamage = ui.reference("Rage", "Aimbot", "Minimum damage"),
     playerList = ui.reference("Players", "Players", "Player List"),
+    ragebot = ui.multiReference("Rage", "Aimbot", "Enabled"),
+    quickpeek = ui.multiReference("Rage", "Other", "Quick peek assist"),
 }
 
 local disabledReferences = {
@@ -1353,22 +1361,62 @@ local function crosshairPaint()
 end
 
 --[[
-    Damage Logs Function
+    Shot Logs Function
 --]]
 
 local onionDamageLog = {
-    control = ui.new_checkbox("Misc", "Miscellaneous", "Damage logs")
+    control = ui.new_checkbox("Misc", "Miscellaneous", "Shot logs"),
+    shotids = {}
 }
 
-local function damageLogEvent(event)
-    if (ui.get(onionDamageLog.control)) then
-        local playerHurt = client.userid_to_entindex(event.userid)
-        local playerAttacker = client.userid_to_entindex(event.attacker)
+local function shotLogEvent(e)
+    if (not ui.get(guiReferences.ragebot[1]) and not ui.get(guiReferences.ragebot[2])) then
+        if (ui.get(onionDamageLog.control)) then
+            local playerHurt = client.userid_to_entindex(e.userid)
+            local playerAttacker = client.userid_to_entindex(e.attacker)
 
-        if (playerAttacker == localPlayer or localPlayer == playerHurt) then
-            local printStr = "Player %s just hurt %s for %s damage and %s armor in hitgroup: %s, they have %s health remaining and %s armor remaining."
-            printStr = string.format(printStr, entity.get_player_name(playerAttacker), entity.get_player_name(playerHurt), tostring(event.dmg_health), tostring(event.dmg_armor), tostring(event.hitgroup), tostring(event.health), tostring(event.armor))
-            print(printStr)
+            if (playerAttacker == localPlayer or localPlayer == playerHurt) then
+                local printStr = "Player %s just hurt %s for %s damage and %s armor in hitgroup: %s, they have %s health remaining and %s armor remaining."
+                printStr = string.format(printStr, entity.get_player_name(playerAttacker), entity.get_player_name(playerHurt), tostring(e.dmg_health), tostring(e.dmg_armor), tostring(e.hitgroup), tostring(e.health), tostring(e.armor))
+                print(printStr)
+            end
+        end
+    else
+        if (e.shot == 1) then
+            table.insert(onionDamageLog.shotids, {id = e.event.id, target = e.event.target, hitchance = e.event.hit_chance, 
+                                   damage = e.event.damage, backtrack = e.event.backtrack, boosted = e.event.boosted,
+                                   priority = e.event.high_priority, interpolated = e.event.interpolated, extrapolated = e.event.extrapolated,
+                                   teleported = e.event.teleported, tick = e.event.tick, hitgroup = e.event.hitgroup})
+        elseif (e.shot == 2) then -- Hit
+            if (onionDamageLog.shotids and #onionDamageLog.shotids > 0) then
+                for i = 1, #onionDamageLog.shotids do
+                    if (onionDamageLog.shotids[i].id == e.event.id) then
+                        if (e.event.target) then
+                            local printStr = "√ You shot at %s for %s hp in the %s with %s%% hitchance, you hit their %s for %s hp with %s%% hitchance and backtracked %s ticks."
+                            printStr = string.format(printStr, entity.get_player_name(e.event.target), onionDamageLog.shotids[i].damage, string.lower(hitgroups[onionDamageLog.shotids[i].hitgroup + 1]), math.floor(onionDamageLog.shotids[i].hitchance),
+                                                               string.lower(hitgroups[e.event.hitgroup + 1]), e.event.damage, math.floor(e.event.hit_chance), onionDamageLog.shotids[i].backtrack)
+
+                            print(printStr) table.remove(onionDamageLog.shotids, i)
+                            return
+                        end
+                    end
+                end
+            end
+        elseif (e.shot == 3) then -- Miss
+            if (onionDamageLog.shotids and #onionDamageLog.shotids > 0) then
+                for i = 1, #onionDamageLog.shotids do
+                    if (onionDamageLog.shotids[i].id == e.event.id) then
+                        if (e.event.target) then
+                            local printStr = "x You shot at %s for %s hp in the %s with %s%% hitchance and %s backtrack ticks, you missed them with %s%% hitchance due to %s."
+                            printStr = string.format(printStr, entity.get_player_name(e.event.target), onionDamageLog.shotids[i].damage, string.lower(hitgroups[onionDamageLog.shotids[i].hitgroup + 1]), math.floor(onionDamageLog.shotids[i].hitchance),
+                                                               onionDamageLog.shotids[i].backtrack, math.floor(e.event.hit_chance), e.event.reason)
+
+                            print(printStr) table.remove(onionDamageLog.shotids, i)
+                            return
+                        end
+                    end
+                end
+            end
         end
     end
 end
@@ -1788,6 +1836,25 @@ local function onionRunAutoDisconnect(fullconnect)
 end
 
 --[[
+    Disable Quick Peek on Death
+    Removed for now because I have 0 clue how to set a hotkey it literally returns a boolean + a number 
+    when using ui.get but the type is boolean and setting it is a string but it's just the hotkey state
+    ex "Always on", "On hotkey", "Toggle", "Off hotkey" so from what I can tell there is no way to disable
+    a hotkey at all other than just disabling the checkbox before that but that's not practical in this case.
+    if there is some hidden way then please tell me and if there isn't please esoterik add something like that
+
+local onionquickPeek = {
+    control = ui.new_checkbox("Misc", "Miscellaneous", "Disable quickpeek on death")
+}
+
+local function onionQuickPeekEvent(e)
+    if (ui.get(guiReferences.quickpeek[1]) and ui.get(guiReferences.quickpeek[2])) then
+        ui.set(guiReferences.quickpeek[2], false)
+    end
+end
+--]]
+
+--[[
     Callbacks
 --]]
 
@@ -1865,11 +1932,29 @@ end)
 
 client.set_event_callback("player_hurt", function(e)
     hitmarkerEvent(e)
-    damageLogEvent(e)
+    shotLogEvent(e)
+end)
+
+client.set_event_callback('aim_fire', function(e)
+    shotLogEvent({shot = 1, event = e})
+end)
+
+client.set_event_callback('aim_hit', function(e)
+    shotLogEvent({shot = 2, event = e})
+end)
+
+client.set_event_callback('aim_miss', function(e)
+    shotLogEvent({shot = 3, event = e})
 end)
 
 client.set_event_callback("player_death", function(e)
+    local ent = client.userid_to_entindex(e.userid)
+
     playerKilledEvent(e)
+
+    if (ent == localPlayer) then
+        onionQuickPeekEvent(e)
+    end
 end)
 
 client.set_event_callback("round_prestart", function(e)
