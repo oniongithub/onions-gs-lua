@@ -1827,7 +1827,9 @@ local function onionRunAutoDisconnect(fullconnect)
                     client.exec("disconnect")
 
                     client.delay_call(5, function()
-                        client.exec("retry")
+                        panorama.loadstring([[
+                            LobbyAPI.StartMatchmaking("", "ct", "t", "");
+                        ]])()
                     end)
                 end
             end
@@ -1859,6 +1861,97 @@ end
 --]]
 
 --[[
+    Damage Logging
+--]]
+
+local onionDamageLogging = {
+    control = ui.new_checkbox("Misc", "Settings", "Damage logs"),
+    cache = {}, localCache = {}
+}
+
+local function onionDamageLogDraw()
+    if (not localPlayer) then
+        onionDamageLogging.cache = {}
+    end
+end
+
+local function onionDamageLogDeathEvent()
+    if (onionDamageLogging.localCache and #onionDamageLogging.localCache > 0) then
+        local damageText = " - Damage Given"
+
+        for i = 1, #onionDamageLogging.localCache do
+            if (onionDamageLogging.localCache[i].entity and onionDamageLogging.localCache[i].damage) then
+                local plyName = entity.get_player_name(onionDamageLogging.localCache[i].entity)
+
+                if (plyName and plyName ~= "") then
+                    damageText = damageText .. "\n  " .. plyName .. " - You hit them for " .. onionDamageLogging.localCache[i].damage .. " hp."
+                end
+            end
+        end
+
+        print(damageText)
+        onionDamageLogging.localCache = {}
+    end
+
+    if (onionDamageLogging.cache and #onionDamageLogging.cache > 0) then
+        local damageText = " - Damage Taken"
+
+        for i = 1, #onionDamageLogging.cache do
+            if (onionDamageLogging.cache[i].entity and onionDamageLogging.cache[i].damage) then
+                local plyName = entity.get_player_name(onionDamageLogging.cache[i].entity)
+
+                if (plyName and plyName ~= "") then
+                    damageText = damageText .. "\n  " .. plyName .. " - Hurt you for " .. onionDamageLogging.cache[i].damage .. " hp."
+                end
+            end
+        end
+
+        print(damageText)
+        onionDamageLogging.cache = {}
+    end
+end
+
+local function onionDamageLogDamageEvent(e)
+    local ent = client.userid_to_entindex(e.userid)
+    local attacker = client.userid_to_entindex(e.attacker)
+    local damage, containsPlayer = e.dmg_health, false
+
+    if (damage) then
+        if (ent == localPlayer) then
+            if (attacker) then
+                if (onionDamageLogging.cache and #onionDamageLogging.cache > 0) then
+                    for i = 1, #onionDamageLogging.cache do
+                        if (onionDamageLogging.cache[i].entity and onionDamageLogging.cache[i].entity == attacker) then
+                            onionDamageLogging.cache[i].damage = onionDamageLogging.cache[i].damage + damage
+                            containsPlayer = true
+                        end
+                    end
+                end
+
+                if (not containsPlayer) then
+                    table.insert(onionDamageLogging.cache, {entity = attacker, damage = damage})
+                end
+            end
+        else
+            if (attacker and attacker == localPlayer) then
+                if (onionDamageLogging.localCache and #onionDamageLogging.localCache > 0) then
+                    for i = 1, #onionDamageLogging.localCache do
+                        if (onionDamageLogging.localCache[i].entity == ent) then
+                            onionDamageLogging.localCache[i].damage = onionDamageLogging.localCache[i].damage + damage
+                            containsPlayer = true
+                        end
+                    end
+                end
+    
+                if (not containsPlayer) then
+                    table.insert(onionDamageLogging.localCache, {entity = ent, damage = damage})
+                end
+            end
+        end
+    end
+end
+
+--[[
     Callbacks
 --]]
 
@@ -1871,6 +1964,7 @@ client.set_event_callback("paint_ui", function()
     menuPos = vector(ui.menu_position())
     menuSize = vector(ui.menu_size())
     keySystem.run()
+    onionDamageLogDraw()
 
     if (localPlayer ~= nil and entity.is_alive(localPlayer)) then
         windows.runMovement()
@@ -1932,11 +2026,13 @@ end)
 
 client.set_event_callback("cs_win_panel_match", function(e)
     onionRunAutoDisconnect(false)
+    onionDamageLogDeathEvent()
 end)
 
 client.set_event_callback("player_hurt", function(e)
     hitmarkerEvent(e)
     shotLogEvent(e)
+    onionDamageLogDamageEvent(e)
 end)
 
 client.set_event_callback('aim_fire', function(e)
@@ -1956,11 +2052,14 @@ client.set_event_callback("player_death", function(e)
 
     playerKilledEvent(e)
 
-    --[[
     if (ent == localPlayer) then
-        onionQuickPeekEvent(e)
+        --onionQuickPeekEvent(e)
+        onionDamageLogDeathEvent()
     end
-    --]]
+end)
+
+client.set_event_callback("cs_win_panel_round", function(e)
+    onionDamageLogDeathEvent()
 end)
 
 client.set_event_callback("round_prestart", function(e)
