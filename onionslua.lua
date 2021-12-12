@@ -1825,6 +1825,10 @@ local function onionRunAutoDisconnect(fullconnect)
             if (ui.get(onionAutoDisconnect.controlInParty)) then
                 if (party.inParty() and client.is_competitive()) then
                     client.exec("disconnect")
+
+                    client.delay_call(5, function()
+                        client.exec("retry")
+                    end)
                 end
             end
         else
