@@ -33,7 +33,7 @@
 * **Auto Team Selection** - Automatically joins the set team when you fully connect.
 * **Killsay** - Posts a message when you kill someone, and it can be set to target everyone or certain players.
 * **Repeat Messages** - Will repeat a players messages, and it can be set to target everyone, certain teams, or certain players. 
-* **Damage Logs** - Logs all damage you give and take to the console.
+* **Shot Logs** - Logs all shots you take with the ragebot on and also logs all the damage given and taken without rage on.
 * **Buybot** - Automatically buys the set weapons for you on round start, ex: (ssg08, hegrenade, smokegrenade).
 * **Vote Revealer** - Reveals the name of voters and what they voted for.
 * **Current Time** - Displays your current time on the top right (cause fuck windows 11 for removing multi monitor time :().
