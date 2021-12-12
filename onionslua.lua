@@ -1,4 +1,4 @@
-local ffi, vector, http, images = require("ffi"), require("vector"), require("gamesense/http"), require("gamesense/images")
+local vector, http, images = require("vector"), require("gamesense/http"), require("gamesense/images")
 local init, localPlayer, mousePos, dpi, version = true, entity.get_local_player(), nil, nil, "cHMn6XTSvbK0Wfoh"
 local menuR, menuG, menuB, menuA = ui.get(ui.reference("Misc", "Settings", "Menu color"))
 local screenSize, menuPos, menuSize = vector(client.screen_size()), vector(ui.menu_position()), vector(ui.menu_size())
