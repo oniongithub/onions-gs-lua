@@ -1,5 +1,5 @@
 local ffi, vector, http, images = require("ffi"), require("vector"), require("gamesense/http"), require("gamesense/images")
-local init, localPlayer, mousePos, dpi, version = true, entity.get_local_player(), nil, nil, "2Y04Y2PrIW06pTrH"
+local init, localPlayer, mousePos, dpi, version = true, entity.get_local_player(), nil, nil, "4q02EIO1cg7qRcAK"
 local menuR, menuG, menuB, menuA = ui.get(ui.reference("Misc", "Settings", "Menu color"))
 local screenSize, menuPos, menuSize = vector(client.screen_size()), vector(ui.menu_position()), vector(ui.menu_size())
 
@@ -97,6 +97,29 @@ function client.UnixTime()
     local unix = client.unix_time()
 
     return unix * 1000 + d
+end
+
+function client.valve_server()
+    local gameRules = entity.get_game_rules();
+
+    if (gameRules) then
+        local value = entity.get_prop(gameRules, "m_bIsValveDS")
+
+        if (type(value) == "number" and value == 1) then
+            return value == 1
+        end
+    end
+
+    return false
+end
+
+function client.is_competitive()
+    local gamemode = cvar.game_mode:get_int()
+    local gametype = cvar.game_type:get_int()
+    
+    if (type(gamemode) == "number" and type(gametype) == "number") then
+        return gamemode == 1 and gametype == 0
+    end
 end
 
 function ui.multiReference(tab, groupbox, name)
@@ -490,6 +513,29 @@ local function notificationPaint()
                 renderer.text(render.x + ((8 + (textW / 2)) * dpi), render.y + (render.h / 2), 255, 255, 255, 255, "cd", 0, notifications[i].text)
             end
         end
+    end
+end
+
+--[[
+    Party API
+--]]
+
+local party = {} party.__index = {}
+
+function party.getCount()
+    local value = panorama.loadstring([[
+        return PartyListAPI.GetCount();
+    ]])()
+
+    if (value) then
+        return value;
+    end
+end
+
+function party.inParty()
+    local value = party.getCount();
+    if (value and type(value) == "number") then
+        return value > 1
     end
 end
 
@@ -1717,6 +1763,31 @@ local function drawCurrentTime()
 end
 
 --[[
+    Auto Disconnect Function
+--]]
+
+local onionAutoDisconnect = {
+    controlOnEnd = ui.new_checkbox("Misc", "Miscellaneous", "Auto disconnect on game end"),
+    controlInParty = ui.new_checkbox("Misc", "Miscellaneous", "Auto disconnect in party"),
+}
+
+local function onionRunAutoDisconnect(fullconnect)
+    if (client.valve_server()) then
+        if (fullconnect) then
+            if (ui.get(onionAutoDisconnect.controlInParty)) then
+                if (party.inParty() and client.is_competitive()) then
+                    client.exec("disconnect")
+                end
+            end
+        else
+            if (ui.get(onionAutoDisconnect.controlOnEnd)) then
+                client.exec("disconnect")
+            end
+        end
+    end
+end
+
+--[[
     Callbacks
 --]]
 
@@ -1782,9 +1853,14 @@ client.set_event_callback("player_connect_full", function(e)
         removeAdvertisement()
         selectTeamEvent(e)
         runPlayerAliases()
+        onionRunAutoDisconnect(true)
     else
         runPlayerAliases(ent)
     end
+end)
+
+client.set_event_callback("cs_win_panel_match", function(e)
+    onionRunAutoDisconnect(false)
 end)
 
 client.set_event_callback("player_hurt", function(e)
