@@ -41,6 +41,7 @@
 * **Holiday Mode** - Replaces applicable colors with the selected holiday colors. :)
 * **Clean Console** - Filters out CS:GO garbage from the console.
 * **Console Luas** - Allows you to execute Luas in the console, ex: (loadstring print("test")).
+* **Damage Logs** - Recreates CS:GO's original damage logs even with console filtering enabled.
 
 ## Player-List
 * **Blockbot Priority** - Prioritizes a player for the blockbot if they're close enough.
