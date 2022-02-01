@@ -1908,44 +1908,46 @@ local onionDamageLogging = {
 }
 
 local function onionDamageLogDraw()
-    if (not localPlayer) then
+    if (not localPlayer or not ui.get(onionDamageLogging.control)) then
         onionDamageLogging.cache = {}
     end
 end
 
 local function onionDamageLogDeathEvent()
-    if (onionDamageLogging.localCache and #onionDamageLogging.localCache > 0) then
-        local damageText = " - Damage Given"
+    if (ui.get(onionDamageLogging.control)) then
+        if (onionDamageLogging.localCache and #onionDamageLogging.localCache > 0) then
+            local damageText = " - Damage Given"
 
-        for i = 1, #onionDamageLogging.localCache do
-            if (onionDamageLogging.localCache[i].entity and onionDamageLogging.localCache[i].damage) then
-                local plyName = entity.get_player_name(onionDamageLogging.localCache[i].entity)
+            for i = 1, #onionDamageLogging.localCache do
+                if (onionDamageLogging.localCache[i].entity and onionDamageLogging.localCache[i].damage) then
+                    local plyName = entity.get_player_name(onionDamageLogging.localCache[i].entity)
 
-                if (plyName and plyName ~= "") then
-                    damageText = damageText .. "\n  " .. plyName .. " - You hit them for " .. onionDamageLogging.localCache[i].damage .. " hp."
+                    if (plyName and plyName ~= "") then
+                        damageText = damageText .. "\n  " .. plyName .. " - You hit them for " .. onionDamageLogging.localCache[i].damage .. " hp."
+                    end
                 end
             end
+
+            print(damageText)
+            onionDamageLogging.localCache = {}
         end
 
-        print(damageText)
-        onionDamageLogging.localCache = {}
-    end
+        if (onionDamageLogging.cache and #onionDamageLogging.cache > 0) then
+            local damageText = " - Damage Taken"
 
-    if (onionDamageLogging.cache and #onionDamageLogging.cache > 0) then
-        local damageText = " - Damage Taken"
+            for i = 1, #onionDamageLogging.cache do
+                if (onionDamageLogging.cache[i].entity and onionDamageLogging.cache[i].damage) then
+                    local plyName = entity.get_player_name(onionDamageLogging.cache[i].entity)
 
-        for i = 1, #onionDamageLogging.cache do
-            if (onionDamageLogging.cache[i].entity and onionDamageLogging.cache[i].damage) then
-                local plyName = entity.get_player_name(onionDamageLogging.cache[i].entity)
-
-                if (plyName and plyName ~= "") then
-                    damageText = damageText .. "\n  " .. plyName .. " - Hurt you for " .. onionDamageLogging.cache[i].damage .. " hp."
+                    if (plyName and plyName ~= "") then
+                        damageText = damageText .. "\n  " .. plyName .. " - Hurt you for " .. onionDamageLogging.cache[i].damage .. " hp."
+                    end
                 end
             end
-        end
 
-        print(damageText)
-        onionDamageLogging.cache = {}
+            print(damageText)
+            onionDamageLogging.cache = {}
+        end
     end
 end
 
@@ -1954,35 +1956,37 @@ local function onionDamageLogDamageEvent(e)
     local attacker = client.userid_to_entindex(e.attacker)
     local damage, containsPlayer = e.dmg_health, false
 
-    if (damage) then
-        if (ent == localPlayer) then
-            if (attacker) then
-                if (onionDamageLogging.cache and #onionDamageLogging.cache > 0) then
-                    for i = 1, #onionDamageLogging.cache do
-                        if (onionDamageLogging.cache[i].entity and onionDamageLogging.cache[i].entity == attacker) then
-                            onionDamageLogging.cache[i].damage = onionDamageLogging.cache[i].damage + damage
-                            containsPlayer = true
+    if (ui.get(onionDamageLogging.control)) then
+        if (damage) then
+            if (ent == localPlayer) then
+                if (attacker) then
+                    if (onionDamageLogging.cache and #onionDamageLogging.cache > 0) then
+                        for i = 1, #onionDamageLogging.cache do
+                            if (onionDamageLogging.cache[i].entity and onionDamageLogging.cache[i].entity == attacker) then
+                                onionDamageLogging.cache[i].damage = onionDamageLogging.cache[i].damage + damage
+                                containsPlayer = true
+                            end
                         end
                     end
-                end
 
-                if (not containsPlayer) then
-                    table.insert(onionDamageLogging.cache, {entity = attacker, damage = damage})
-                end
-            end
-        else
-            if (attacker and attacker == localPlayer) then
-                if (onionDamageLogging.localCache and #onionDamageLogging.localCache > 0) then
-                    for i = 1, #onionDamageLogging.localCache do
-                        if (onionDamageLogging.localCache[i].entity == ent) then
-                            onionDamageLogging.localCache[i].damage = onionDamageLogging.localCache[i].damage + damage
-                            containsPlayer = true
-                        end
+                    if (not containsPlayer) then
+                        table.insert(onionDamageLogging.cache, {entity = attacker, damage = damage})
                     end
                 end
-    
-                if (not containsPlayer) then
-                    table.insert(onionDamageLogging.localCache, {entity = ent, damage = damage})
+            else
+                if (attacker and attacker == localPlayer) then
+                    if (onionDamageLogging.localCache and #onionDamageLogging.localCache > 0) then
+                        for i = 1, #onionDamageLogging.localCache do
+                            if (onionDamageLogging.localCache[i].entity == ent) then
+                                onionDamageLogging.localCache[i].damage = onionDamageLogging.localCache[i].damage + damage
+                                containsPlayer = true
+                            end
+                        end
+                    end
+        
+                    if (not containsPlayer) then
+                        table.insert(onionDamageLogging.localCache, {entity = ent, damage = damage})
+                    end
                 end
             end
         end
