@@ -26,6 +26,7 @@
 * **Thirdperson Extension** - Allows you to toggle collisions and set a custom distance.
 * **Remove Adverts** - Removes materials that relate to server advertisements.
 * **Hideshots Indicator** - Adds a hideshots indicator to the default GS indicators.
+* **GUI Particles** - Adds circular particles with customizable options to be seen in the GUI.
 
 ## Miscellaneous
 * **Clean Resetscore** - Saves you when you misstype RS by correcting it before it's sent to the server.
@@ -42,6 +43,8 @@
 * **Clean Console** - Filters out CS:GO garbage from the console.
 * **Console Luas** - Allows you to execute Luas in the console, ex: (loadstring print("test")).
 * **Damage Logs** - Recreates CS:GO's original damage logs even with console filtering enabled.
+* **Dump Lua Functions** - Outputs current functions available from Lua's global table to the console.
+* **Fall Indicator** - Displays a rough estimation of your fall damage with calculations based on the 2018 source leak.
 
 ## Player-List
 * **Blockbot Priority** - Prioritizes a player for the blockbot if they're close enough.
