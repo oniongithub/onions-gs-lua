@@ -1,5 +1,5 @@
 local vector, http, images = require("vector"), require("gamesense/http"), require("gamesense/images")
-local init, localPlayer, mousePos, dpi, version = true, entity.get_local_player(), nil, nil, "cHMn6XTSvbK0Wfoh"
+local init, localPlayer, mousePos, dpi, alias, version, unixTime = true, entity.get_local_player(), nil, nil, "", "5gOdIIjNF2sP9igB", nil
 local menuR, menuG, menuB, menuA = ui.get(ui.reference("Misc", "Settings", "Menu color"))
 local screenSize, menuPos, menuSize = vector(client.screen_size()), vector(ui.menu_position()), vector(ui.menu_size())
 
@@ -98,12 +98,20 @@ function math.clamp(number, min, max)
     end
 end
 
-function client.UnixTime()
-    local a, b, c, d = client.system_time()
-    local unix = client.unix_time()
+function math.in_bounds(x, y, w, h, pos_x, pos_y)
+    if (pos_x >= x and pos_x <= x + w) then
+        if (pos_y >= y and pos_y <= y + h) then
+            return true
+        end
+    end
 
-    return unix * 1000 + d
+    return false
 end
+
+function client.UnixTime()
+    local s = client.unix_time() local a, b, c, d = client.system_time()
+    return s * 1000 + d
+end unixTime = client.UnixTime()
 
 function client.valve_server()
     local gameRules = entity.get_game_rules();
@@ -226,6 +234,25 @@ local function drawBox(x, y, w, h, outline, color)
         end
     else
         rect(x, y, w, h, newCol)
+    end
+end
+
+function renderer.filled_circle(x, y, r, g, b, a, radius, segments)
+    local per_angle, last_pos_x, last_pos_y, cur_pos_x, cur_pos_y, current_angle, cos, sin = 360 / segments
+
+    for i = 0, segments do
+        if (i * per_angle <= 360) then
+            current_angle, cos, sin = math.rad(i * per_angle)
+            cos, sin = radius * math.cos(current_angle), radius * math.sin(current_angle)
+
+            if (not last_pos_x or not last_pos_y) then
+                last_pos_x, last_pos_y = cos + x, sin + y
+            else
+                cur_pos_x, cur_pos_y = cos + x, sin + y;          
+                renderer.triangle(last_pos_x, last_pos_y, cur_pos_x, cur_pos_y, x, y, r, g, b, a)
+                last_pos_x, last_pos_y = cur_pos_x, cur_pos_y
+            end
+        end
     end
 end
 
@@ -640,7 +667,7 @@ end)
 
 local function runRainbow()
     if (ui.get(onionHolidays.control) ~= "None") then
-        local holidayPercent = (client.UnixTime() - onionHolidays.time) / 2500
+        local holidayPercent = (unixTime - onionHolidays.time) / 2500
         local newPercent = easingWidth(3, 1, holidayPercent)
 
         if (onionHolidays.switch) then
@@ -651,7 +678,7 @@ local function runRainbow()
 
         if (holidayPercent > 1) then
             onionHolidays.switch = not onionHolidays.switch
-            onionHolidays.time = client.UnixTime()
+            onionHolidays.time = unixTime
         end
     end
 end
@@ -780,6 +807,37 @@ local function extrapolatedPosition() -- just get current max charge and do some
         end
     end
 end
+
+--[[
+    Dump API Functions
+--]]
+
+local onionDumpAPI = {
+    control = nil,
+    table = {}
+}
+
+local function dumpAPI(tbl, ind)
+    onionDumpAPI.table[tbl] = true
+    local s = {}
+    local n = 0
+    for k in pairs(tbl) do
+        n = n + 1
+        s[n] = k
+    end
+
+    for k, v in ipairs(s) do
+        if (not tostring(v):find("weapons")) then
+            print(ind, v)
+            v = tbl[v]
+            if type(v) == "table" and not onionDumpAPI.table[v] then
+                dumpAPI(v, ind .. "\t")
+            end
+        end
+    end
+end
+
+onionDumpAPI.control = ui.new_button("Misc", "Miscellaneous", "Dump Lua Functions", function() dumpAPI(_G, "") end)
 
 --[[
     RS Function
@@ -1384,7 +1442,7 @@ local function shotLogEvent(e)
     else
         if (e.shot == 1) then
             table.insert(onionDamageLog.shotids, {id = e.event.id, target = e.event.target, hitchance = e.event.hit_chance, 
-                                   damage = e.event.damage, backtrack = e.event.backtrack, boosted = e.event.boosted,
+                                   damage = e.event.damage, backtrack = globals.tickcount() - e.event.tick, boosted = e.event.boosted,
                                    priority = e.event.high_priority, interpolated = e.event.interpolated, extrapolated = e.event.extrapolated,
                                    teleported = e.event.teleported, tick = e.event.tick, hitgroup = e.event.hitgroup})
         elseif (e.shot == 2) then -- Hit
@@ -1427,11 +1485,10 @@ end
 
 local onionBuybot = {
     enableControl = ui.new_checkbox("Misc", "Miscellaneous", "Buybot"),
-    buttonControl,
-    buybotControls = {
+    buttonControl, buybotControls = {
         ui.new_combobox("Misc", "Miscellaneous", "Primary", "None", "Rifle", "Auto", "Scout", "AWP"),
-        ui.new_combobox("Misc", "Miscellaneous", "Primary", "None", "Usp_silencer", "Glock", "Deagle"),
-        ui.new_multiselect("Misc", "Miscellaneous", "Primary", "Taser", "Molotov", "Incgrenade", "Smokegrenade", "Hegrenade", "Flashbang") 
+        ui.new_combobox("Misc", "Miscellaneous", "Secondary", "None", "Usp_silencer", "Glock", "Deagle"),
+        ui.new_multiselect("Misc", "Miscellaneous", "Additional", "Taser", "Assaultsuit", "Defuser", "Molotov", "Incgrenade", "Smokegrenade", "Hegrenade", "Flashbang") 
     }, visible = true
 }
 
@@ -1728,7 +1785,7 @@ regenerateWeatherTable()
 
 local function runPlayerParticles()
     if (ui.get(onionWeather.particleControl)) then
-        onionWeather.time = client.UnixTime()
+        onionWeather.time = unixTime
         local localOrigin = vector(entity.get_origin(localPlayer))
         local fraction = client.trace_line(localPlayer, localOrigin.x, localOrigin.y, localOrigin.z, localOrigin.x, localOrigin.y, localOrigin.z - 1000)
         local floorHeight = vector(localOrigin.x, localOrigin.y, localOrigin.z - 1000 * fraction)
@@ -1842,25 +1899,6 @@ local function onionRunAutoDisconnect(fullconnect)
 end
 
 --[[
-    Disable Quick Peek on Death
-    Removed for now because I have 0 clue how to set a hotkey it literally returns a boolean + a number 
-    when using ui.get but the type is boolean and setting it is a string but it's just the hotkey state
-    ex "Always on", "On hotkey", "Toggle", "Off hotkey" so from what I can tell there is no way to disable
-    a hotkey at all other than just disabling the checkbox before that but that's not practical in this case.
-    if there is some hidden way then please tell me and if there isn't please esoterik add something like that
-
-local onionquickPeek = {
-    control = ui.new_checkbox("Misc", "Miscellaneous", "Disable quickpeek on death")
-}
-
-local function onionQuickPeekEvent(e)
-    if (ui.get(guiReferences.quickpeek[1]) and ui.get(guiReferences.quickpeek[2])) then
-        ui.set(guiReferences.quickpeek[2], false)
-    end
-end
---]]
-
---[[
     Damage Logging
 --]]
 
@@ -1952,11 +1990,151 @@ local function onionDamageLogDamageEvent(e)
 end
 
 --[[
+    Fall Damage Indicator
+--]]
+
+local onionFallDamage = {
+    control = ui.new_checkbox("Visuals", "Other ESP", "Fall damage"),
+    cache = {}, localCache = {}
+}
+
+local function onionFallDamageDraw()
+    if (ui.get(onionFallDamage.control)) then
+        local velocity, damage = entity.get_prop(localPlayer, "m_flFallVelocity"), 0
+        local CS_PLAYER_FATAL_FALL_SPEED = 1000
+        local CS_PLAYER_MAX_SAFE_FALL_SPEED = 580
+        local CS_DAMAGE_FOR_FALL_SPEED = 100 / (CS_PLAYER_FATAL_FALL_SPEED - CS_PLAYER_MAX_SAFE_FALL_SPEED)
+
+        if (velocity > 0) then
+            damage = math.ceil(math.clamp(velocity - CS_PLAYER_MAX_SAFE_FALL_SPEED, 0, 1000) * CS_DAMAGE_FOR_FALL_SPEED)
+
+            if (damage > 0) then
+                renderer.indicator(255, 255, 255, 255, "Fall: " .. damage)
+            end
+        end
+    end
+end
+
+--[[
+    Menu Particles
+--]]
+
+local onionMenuParticles = {
+    controls = {
+        menu_particles = ui.new_checkbox("Misc", "Settings", "Menu Particles"),
+        particle_color = ui.new_color_picker("Misc", "Settings", "Particle Color", 255, 140, 140, 200),
+        particle_count = ui.new_slider("Misc", "Settings", "Particle Count", 10, 1000, 125),
+        particle_side_drift = ui.new_slider("Misc", "Settings", "Particle Drift", 0, screenSize.x, screenSize.y),
+        particle_random_alpha = ui.new_slider("Misc", "Settings", "Particle Randomized Alpha", 0, 100, 75),
+        particle_min = ui.new_slider("Misc", "Settings", "Minimum Size", 1, 25, 3),
+        particle_max = ui.new_slider("Misc", "Settings", "Maximum Size", 1, 25, 5),
+        particle_speed_min = ui.new_slider("Misc", "Settings", "Minimum Speed", 1000, 25000, 10000),
+        particle_speed_max = ui.new_slider("Misc", "Settings", "Maximum Speed", 1000, 25000, 15000),
+        particle_connection = ui.new_checkbox("Misc", "Settings", "Particle Connection"),
+        particle_connection_radius = ui.new_slider("Misc", "Settings", "Connection Radius", 1, screenSize.x, 100),
+        particle_connection_color = ui.new_color_picker("Misc", "Settings", "Connection Color", 255, 140, 140, 200),
+    }, particle_table = {}, particle_time_flush = { flush = false, time = 0 }
+}
+
+local function regenerate_particle_table(type)
+    local value = ui.get(onionMenuParticles.controls.particle_count)
+    
+    if (type and type == 1) then
+        if (#onionMenuParticles.particle_table > value) then
+            local remove_required = #onionMenuParticles.particle_table - value
+
+            for i = 1, remove_required do
+                onionMenuParticles.particle_table[#onionMenuParticles.particle_table] = nil
+            end
+        end
+    elseif (not type) then
+        for i = #onionMenuParticles.particle_table, 1, -1 do onionMenuParticles.particle_table[i] = nil end
+    end
+
+    for i = 1, value - #onionMenuParticles.particle_table do
+        math.randomseed(unixTime + i)
+        table.insert(onionMenuParticles.particle_table, {size = math.random(ui.get(onionMenuParticles.controls.particle_min), ui.get(onionMenuParticles.controls.particle_max)), 
+                                      alpha = math.random(0, ui.get(onionMenuParticles.controls.particle_random_alpha)), drift = math.random(-ui.get(onionMenuParticles.controls.particle_side_drift), 
+                                      ui.get(onionMenuParticles.controls.particle_side_drift)), speed = math.random(ui.get(onionMenuParticles.controls.particle_speed_min), 
+                                      ui.get(onionMenuParticles.controls.particle_speed_max)), x_pos = math.random(0, screenSize.x), time = unixTime, start = math.random(0, screenSize.y)})
+    end
+end
+
+ui.set_callback(onionMenuParticles.controls.particle_count, function() regenerate_particle_table(1) end)
+ui.set_callback(onionMenuParticles.controls.particle_min, function() regenerate_particle_table() end)
+ui.set_callback(onionMenuParticles.controls.particle_max, function() regenerate_particle_table() end)
+ui.set_callback(onionMenuParticles.controls.particle_speed_min, function() regenerate_particle_table() end)
+ui.set_callback(onionMenuParticles.controls.particle_speed_max, function() regenerate_particle_table() end)
+ui.set_callback(onionMenuParticles.controls.particle_side_drift, function() regenerate_particle_table() end)
+ui.set_callback(onionMenuParticles.controls.particle_random_alpha, function() regenerate_particle_table() end)
+regenerate_particle_table()
+
+local function onionMenuParticlesDraw()
+    if (ui.get(onionMenuParticles.controls.menu_particles) and ui.is_menu_open()) then
+        r, g, b, a = ui.get(onionMenuParticles.controls.particle_color)
+        c_r, c_g, c_b, c_a = ui.get(onionMenuParticles.controls.particle_connection_color)
+        particle_connection, particle_connection_radius = ui.get(onionMenuParticles.controls.particle_connection), ui.get(onionMenuParticles.controls.particle_connection_radius)
+        gui_pos_x, gui_pos_y = ui.menu_position()
+        gui_size_x, gui_size_y = ui.menu_size()
+
+        if (onionMenuParticles.particle_time_flush.flush) then time_difference = unixTime - onionMenuParticles.particle_time_flush.time end
+
+        for i = 1, #onionMenuParticles.particle_table do
+            local control_a = a
+            control_a = a - (a * ((onionMenuParticles.particle_table[i].alpha) / 100))
+
+            if (onionMenuParticles.particle_time_flush.flush) then
+                onionMenuParticles.particle_table[i].time = onionMenuParticles.particle_table[i].time + time_difference
+            end
+
+            local fall_percent = (unixTime - onionMenuParticles.particle_table[i].time) / onionMenuParticles.particle_table[i].speed
+            local y_pos = screenSize.y * fall_percent + onionMenuParticles.particle_table[i].start
+            local x_pos = onionMenuParticles.particle_table[i].x_pos + (onionMenuParticles.particle_table[i].drift * fall_percent)
+
+            if (math.in_bounds(gui_pos_x, gui_pos_y, gui_size_x, gui_size_y, x_pos, y_pos)) then goto skip_that_shit end
+
+            if (fall_percent <= 1 and y_pos < screenSize.y and x_pos >= 0 and x_pos <= screenSize.x) then
+                if (particle_connection) then
+                    for f = i, #onionMenuParticles.particle_table do
+                        if (f ~= i) then
+                            local fall_percent_2 = (unixTime - onionMenuParticles.particle_table[f].time) / onionMenuParticles.particle_table[f].speed
+                            local y_pos_2 = screenSize.y * fall_percent_2 + onionMenuParticles.particle_table[f].start
+                            local x_pos_2 = onionMenuParticles.particle_table[f].x_pos + (onionMenuParticles.particle_table[f].drift * fall_percent_2)
+
+                            if (math.sqrt((x_pos - x_pos_2)^2 + (y_pos - y_pos_2)^2) <= particle_connection_radius) then
+                                renderer.line(x_pos, y_pos, x_pos_2, y_pos_2, c_r, c_g, c_b, c_a)
+                            end
+                        end
+                    end
+                end
+
+                local segments = 8 if (onionMenuParticles.particle_table[i].size >= 4 and onionMenuParticles.particle_table[i].size <= 6) then segments = onionMenuParticles.particle_table[i].size + 2 end
+                renderer.filled_circle(x_pos, y_pos, r, g, b, control_a, onionMenuParticles.particle_table[i].size, segments)
+            else
+                math.randomseed(unixTime + i)
+                onionMenuParticles.particle_table[i].time, onionMenuParticles.particle_table[i].start, onionMenuParticles.particle_table[i].x_pos = unixTime, 0, math.random(0, screenSize.x)
+            end
+
+            ::skip_that_shit::
+        end
+
+        if (onionMenuParticles.particle_time_flush.flush) then
+            onionMenuParticles.particle_time_flush.flush = false
+        end
+    else
+        if (not onionMenuParticles.particle_time_flush.flush) then
+            onionMenuParticles.particle_time_flush.flush, onionMenuParticles.particle_time_flush.time = true, unixTime
+        end
+    end
+end
+
+--[[
     Callbacks
 --]]
 
 client.set_event_callback("paint_ui", function()
     dpi = getDPI()
+    unixTime = client.UnixTime()
     localPlayer = entity.get_local_player()
     notificationPaint()
     mousePos = vector(ui.mouse_position())
@@ -1965,6 +2143,7 @@ client.set_event_callback("paint_ui", function()
     menuSize = vector(ui.menu_size())
     keySystem.run()
     onionDamageLogDraw()
+    onionMenuParticlesDraw()
 
     if (localPlayer ~= nil and entity.is_alive(localPlayer)) then
         windows.runMovement()
@@ -1984,6 +2163,7 @@ client.set_event_callback("paint_ui", function()
             runPlayerParticles()
             drawCurrentTime()
             drawHideshotsIndicator()
+            onionFallDamageDraw()
         else
             init = false
         end
@@ -2053,7 +2233,6 @@ client.set_event_callback("player_death", function(e)
     playerKilledEvent(e)
 
     if (ent == localPlayer) then
-        --onionQuickPeekEvent(e)
         onionDamageLogDeathEvent()
     end
 end)
@@ -2063,6 +2242,10 @@ client.set_event_callback("cs_win_panel_round", function(e)
 end)
 
 client.set_event_callback("round_prestart", function(e)
+    onNewRoundEvent(e)
+end)
+
+client.set_event_callback("round_start", function(e)
     onNewRoundEvent(e)
 end)
 
