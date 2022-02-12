@@ -1,4 +1,7 @@
-local vector, http, images = require("vector"), require("gamesense/http"), require("gamesense/images")
+local vector, http, images = require("vector")
+pcall(function() http = require("gamesense/http") end)
+pcall(function() images = require("gamesense/images") end)
+local FLAG_IMAGES, FLAG_HTTP = not not images, not not http
 local init, localPlayer, mousePos, dpi, alias, version, unixTime = true, entity.get_local_player(), nil, nil, "", "5gOdIIjNF2sP9igB", nil
 local menuR, menuG, menuB, menuA = ui.get(ui.reference("Misc", "Settings", "Menu color"))
 local screenSize, menuPos, menuSize = vector(client.screen_size()), vector(ui.menu_position()), vector(ui.menu_size())
@@ -6,13 +9,6 @@ local screenSize, menuPos, menuSize = vector(client.screen_size()), vector(ui.me
 --[[
     Hot Enumerators
 --]]
-
-local moveType = {
-    none = 0, isometric = 1, walk = 2,
-    step = 3, fly = 4, flygravity = 5, 
-    vphysics = 6, push = 7, noclip = 8,
-    ladder = 9, observer = 10, custom = 11
-}
 
 local flags = {
     onground = 1, ducking = 2, waterjump = 3,
@@ -41,40 +37,8 @@ local function getDPI() -- since the dpi control returns a string with a % sign 
     end
 end
 
-local function inMoveType(ent, movetype)
-    return entity.get_prop(ent, "m_movetype") == movetype
-end
-
 local function hasFlag(ent, flag)
     return bit.band(flag, entity.get_prop(ent, "m_fFlags")) ~= 0
-end
-
-local function degToRad(deg)
-    return deg * math.pi / 180
-end
-
-local function fromAng(vec)
-    return vector(math.cos(degToRad(vec.x)) * math.cos(degToRad(vec.y)), math.cos(degToRad(vec.x)) * math.sin(degToRad(vec.y)), -1 * math.sin(degToRad(vec.x)))
-end
-
-local function trace(entSkip, vector1, vector2) -- replacement function to the regular trace that returns the ending vector aswell
-    local percent, hitEnt = client.trace_line(entity.get_local_player(), vector1.x, vector1.y, vector1.z, vector2.x, vector2.y, vector2.z)
-    local endVector = vector(vector1.x + (vector2.x - vector1.x * percent), vector1.y + (vector2.y - vector1.y * percent), vector1.z + (vector2.z - vector1.z * percent))
-
-    return percent, hitEnt, endVector
-end
-
-local function traceCrosshair() -- trace to the end of your crosshair using eye angles
-    local traceDist = 10000 -- Suck my nutts
-
-    local eye = vector(client.camera_position())
-    local camX, camY, camZ = client.camera_angles()
-    local cam = fromAng(vector(camX, camY, camZ))
-    local crosshairLocation = vector(eye.x + cam.x * traceDist, eye.y + cam.y * traceDist, eye.z + cam.z * traceDist)
-    local percent, hitEnt = client.trace_line(entity.get_local_player(), eye.x, eye.y, eye.z, crosshairLocation.x, crosshairLocation.y, crosshairLocation.z)
-    crosshairLocation = vector(eye.x + cam.x * (traceDist * percent), eye.y + cam.y * (traceDist * percent), eye.z + cam.z * (traceDist * percent))
-
-    return percent, hitEnt, crosshairLocation
 end
 
 local function contains(table, key)
@@ -632,15 +596,22 @@ client.set_event_callback("shutdown", function()
     end
 end);
 
-local output = http.get("https://raw.githubusercontent.com/oniongithub/onions-gs-lua/main/version", function(status, response)
-    if (status and response and response.status == 200 and type(response.body) == "string") then
-        local body = response.body:gsub("\n", "")
-        if (not string.find(body, version)) then
-            local text = "There is a new update available at https://github.com/oniongithub/onions-gs-lua"
-            notification(text, 6000, {menuR, menuG, menuB, menuA}, 4, 1):run() print(text)
+if (FLAG_HTTP and http) then
+    local output = http.get("https://raw.githubusercontent.com/oniongithub/onions-gs-lua/main/version", function(status, response)
+        if (status and response and response.status == 200 and type(response.body) == "string") then
+            local body = response.body:gsub("\n", "")
+            if (not string.find(body, version)) then
+                local text = "There is a new update available at https://github.com/oniongithub/onions-gs-lua"
+                notification(text, 6000, {menuR, menuG, menuB, menuA}, 4, 1):run() print(text)
+            end
         end
-    end
-end)
+    end)
+end
+
+if (not FLAG_HTTP or not http or not FLAG_IMAGES or not images) then
+    local text = "You're missing optional packages (Some features may be disabled), HTTP: " .. (not FLAG_HTTP and "x" or "√") .. ", IMAGES: " .. (not FLAG_IMAGES and "x" or "√") .. "."
+    notification(text, 6000, {menuR, menuG, menuB, menuA}, 4, 1):run() print(text)
+end
 
 --[[
     Holiday Mode
@@ -756,7 +727,6 @@ local function blockbotMove(cmd) -- move with the selected player on the setup m
     end
 end
 
-
 --[[
     Thirdperson Function
 --]]
@@ -787,13 +757,20 @@ thirdpersonValues()
 --]]
 
 local onionExtrapolation = {
-    control = ui.new_checkbox("Visuals", "Other ESP", "Teleport prediction")
+    control = ui.new_checkbox("Visuals", "Other ESP", "Teleport prediction"),
+    simtime_cache = {},
 }
 
-local function extrapolatedPosition() -- just get current max charge and do some magical math to get an inaccurate answer (also server tickrate is hardcoded smd)
+local function extrapolatedPosition()
     if (ui.get(onionExtrapolation.control)) then
         if (ui.get(guiReferences.doubletap[1]) and ui.get(guiReferences.doubletap[2])) then
-            local percent = (16 - ui.get(guiReferences.dtFakelag)) / 64
+            local shiftedTicks = 0
+            for i = 1, #onionExtrapolation.simtime_cache do
+                shiftedTicks = shiftedTicks + onionExtrapolation.simtime_cache[i]
+            end 
+            shiftedTicks = shiftedTicks / #onionExtrapolation.simtime_cache
+
+            local percent = shiftedTicks * globals.tickinterval()
             local velX, velY, velZ = entity.get_prop(localPlayer, "m_vecVelocity")
             local originX, originY, originZ = entity.get_origin(localPlayer)
             local endX, endY = originX + velX * percent, originY + velY * percent
@@ -805,6 +782,14 @@ local function extrapolatedPosition() -- just get current max charge and do some
 
             draw3D({ x = endX, y = endY, z = originZ }, 8, drawColor, true, objects.circle)
         end
+    end
+end
+
+local function simtimeAverage()
+    table.insert(onionExtrapolation.simtime_cache, math.abs(entity.get_prop(localPlayer, "m_flSimulationTime") / globals.tickinterval() - globals.tickcount()))
+
+    if (#onionExtrapolation.simtime_cache > 8) then
+        table.remove(onionExtrapolation.simtime_cache, 1)
     end
 end
 
@@ -1577,7 +1562,7 @@ local onionESPPreview = {
     control = ui.new_checkbox("Visuals", "Player ESP", "Preview"), previewImage
 }
 
-if (images) then
+if (FLAG_IMAGES and FLAG_HTTP and http and images) then
     http.get("https://i.imgur.com/TdY2kCd.png", function(status, response)
         if (status and response and response.status == 200) then
             onionESPPreview.previewImage = images.load_png(response.body)
@@ -1593,8 +1578,8 @@ local function previewPaint() -- Draw the esp preview and check each control's s
     if (ui.is_menu_open() and ui.get(onionESPPreview.control)) then
         win.visible = true
         win.x, win.y = menuPos.x - ((win.w + 8) * dpi), menuPos.y + ((menuSize.y / 2) - ((win.h * dpi) / 2))
-        local imageW, imageH, imageX, imageY = 0, 0, 0, 0
-        if (images and onionESPPreview.previewImage) then
+        local imageW, imageH, imageX, imageY = 150 * dpi, 300 * dpi, win.x + 50 * dpi, win.y + 50 * dpi
+        if (FLAG_IMAGES and images and onionESPPreview.previewImage) then
             imageW, imageH, percent = onionESPPreview.previewImage:measure()
             if (imageW > imageH) then percent = 300 / imageW else percent = 300 / imageH end
             imageW, imageH = (imageW * percent) * dpi, (imageH * percent) * dpi
@@ -2181,6 +2166,10 @@ client.set_event_callback("setup_command", function(cmd)
         overrideMove()
         fakeFlickEvent(cmd)
     end
+end)
+
+client.set_event_callback("net_update_start", function()
+    simtimeAverage()
 end)
 
 client.set_event_callback("string_cmd", function(str)
