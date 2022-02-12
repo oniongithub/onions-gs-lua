@@ -60,7 +60,7 @@
 * **sapphyrus** - Images (viewtopic.php?id=22917) and HTTP (viewtopic.php?id=19253) libraries.
 * **halflifefan** - Modified some code from his post for the blockbot (viewtopic.php?id=10839).
 * **Mr Stinky** - Modified code from his stackoverflow post for dumping Lua's global environment (/questions/2620377).
-* **LosAngeles** - Explaining how to get charged ticks more accurately and remove hardcoded tickrates for more accurate tp prediction.
+* **LosAngeles** - Explaining how to get charged ticks more accurately and remove hardcoded tickrates for more accurate tp prediction *no code used*.
 * **pilot** - Displaying how to remove a material with the material system (viewtopic.php?id=31518) *no code used*.
 * **duke** - Displaying out to interact with the playerlist (viewtopic.php?id=19293) *no code used*.
 * **wish** - Stole ESP preview idea from him, was made before any of the new preview lua posts *no code used*.
