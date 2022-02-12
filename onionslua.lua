@@ -2,7 +2,7 @@ local vector, http, images = require("vector")
 pcall(function() http = require("gamesense/http") end)
 pcall(function() images = require("gamesense/images") end)
 local FLAG_IMAGES, FLAG_HTTP = not not images, not not http
-local init, localPlayer, mousePos, dpi, alias, version, unixTime = true, entity.get_local_player(), nil, nil, "", "5gOdIIjNF2sP9igB", nil
+local init, localPlayer, mousePos, dpi, alias, version, unixTime = true, entity.get_local_player(), nil, nil, "", "b0CdmgVytGxXL5QX", nil
 local menuR, menuG, menuB, menuA = ui.get(ui.reference("Misc", "Settings", "Menu color"))
 local screenSize, menuPos, menuSize = vector(client.screen_size()), vector(ui.menu_position()), vector(ui.menu_size())
 
