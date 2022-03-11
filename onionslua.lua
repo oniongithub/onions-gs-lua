@@ -2,7 +2,7 @@ local vector, http, images = require("vector")
 pcall(function() http = require("gamesense/http") end)
 pcall(function() images = require("gamesense/images") end)
 local FLAG_IMAGES, FLAG_HTTP = not not images, not not http
-local init, localPlayer, mousePos, dpi, alias, version, unixTime = true, entity.get_local_player(), nil, nil, "", "b0CdmgVytGxXL5QX", nil
+local init, localPlayer, mousePos, dpi, alias, version, unixTime = true, entity.get_local_player(), nil, nil, "", "qdM2BTyCJoVzxO7c", nil
 local menuR, menuG, menuB, menuA = ui.get(ui.reference("Misc", "Settings", "Menu color"))
 local screenSize, menuPos, menuSize = vector(client.screen_size()), vector(ui.menu_position()), vector(ui.menu_size())
 
@@ -786,10 +786,14 @@ local function extrapolatedPosition()
 end
 
 local function simtimeAverage()
-    table.insert(onionExtrapolation.simtime_cache, math.abs(entity.get_prop(localPlayer, "m_flSimulationTime") / globals.tickinterval() - globals.tickcount()))
+    local sim_time = entity.get_prop(localPlayer, "m_flSimulationTime")
+    
+    if (sim_time and type(sim_time) == "number") then
+        table.insert(onionExtrapolation.simtime_cache, math.abs(sim_time / globals.tickinterval() - globals.tickcount()))
 
-    if (#onionExtrapolation.simtime_cache > 8) then
-        table.remove(onionExtrapolation.simtime_cache, 1)
+        if (#onionExtrapolation.simtime_cache > 8) then
+            table.remove(onionExtrapolation.simtime_cache, 1)
+        end
     end
 end
 
@@ -1413,49 +1417,49 @@ local onionDamageLog = {
 }
 
 local function shotLogEvent(e)
-    if (not ui.get(guiReferences.ragebot[1]) and not ui.get(guiReferences.ragebot[2])) then
-        if (ui.get(onionDamageLog.control)) then
-            local playerHurt = client.userid_to_entindex(e.userid)
-            local playerAttacker = client.userid_to_entindex(e.attacker)
+    if (ui.get(onionDamageLog.control)) then
+        if (not ui.get(guiReferences.ragebot[1]) and not ui.get(guiReferences.ragebot[2])) then
+                local playerHurt = client.userid_to_entindex(e.userid)
+                local playerAttacker = client.userid_to_entindex(e.attacker)
 
-            if (playerAttacker == localPlayer or localPlayer == playerHurt) then
-                local printStr = "Player %s just hurt %s for %s damage and %s armor in hitgroup: %s, they have %s health remaining and %s armor remaining."
-                printStr = string.format(printStr, entity.get_player_name(playerAttacker), entity.get_player_name(playerHurt), tostring(e.dmg_health), tostring(e.dmg_armor), tostring(e.hitgroup), tostring(e.health), tostring(e.armor))
-                print(printStr)
-            end
-        end
-    else
-        if (e.shot == 1) then
-            table.insert(onionDamageLog.shotids, {id = e.event.id, target = e.event.target, hitchance = e.event.hit_chance, 
-                                   damage = e.event.damage, backtrack = globals.tickcount() - e.event.tick, boosted = e.event.boosted,
-                                   priority = e.event.high_priority, interpolated = e.event.interpolated, extrapolated = e.event.extrapolated,
-                                   teleported = e.event.teleported, tick = e.event.tick, hitgroup = e.event.hitgroup})
-        elseif (e.shot == 2) then -- Hit
-            if (onionDamageLog.shotids and #onionDamageLog.shotids > 0) then
-                for i = 1, #onionDamageLog.shotids do
-                    if (onionDamageLog.shotids[i].id == e.event.id) then
-                        if (e.event.target) then
-                            local printStr = "√ You shot at %s for %s hp in the %s with %s%% hitchance, you hit their %s for %s hp with %s%% hitchance and backtracked %s ticks."
-                            printStr = string.format(printStr, entity.get_player_name(e.event.target), onionDamageLog.shotids[i].damage, string.lower(hitgroups[onionDamageLog.shotids[i].hitgroup + 1]), math.floor(onionDamageLog.shotids[i].hitchance),
-                                                               string.lower(hitgroups[e.event.hitgroup + 1]), e.event.damage, math.floor(e.event.hit_chance), onionDamageLog.shotids[i].backtrack)
+                if (playerAttacker == localPlayer or localPlayer == playerHurt) then
+                    local printStr = "Player %s just hurt %s for %s damage and %s armor in hitgroup: %s, they have %s health remaining and %s armor remaining."
+                    printStr = string.format(printStr, entity.get_player_name(playerAttacker), entity.get_player_name(playerHurt), tostring(e.dmg_health), tostring(e.dmg_armor), tostring(e.hitgroup), tostring(e.health), tostring(e.armor))
+                    print(printStr)
+                end
+        else
+            if (e.shot == 1) then
+                table.insert(onionDamageLog.shotids, {id = e.event.id, target = e.event.target, hitchance = e.event.hit_chance, 
+                                    damage = e.event.damage, backtrack = globals.tickcount() - e.event.tick, boosted = e.event.boosted,
+                                    priority = e.event.high_priority, interpolated = e.event.interpolated, extrapolated = e.event.extrapolated,
+                                    teleported = e.event.teleported, tick = e.event.tick, hitgroup = e.event.hitgroup})
+            elseif (e.shot == 2) then -- Hit
+                if (onionDamageLog.shotids and #onionDamageLog.shotids > 0) then
+                    for i = 1, #onionDamageLog.shotids do
+                        if (onionDamageLog.shotids[i].id == e.event.id) then
+                            if (e.event.target) then
+                                local printStr = "√ You shot at %s for %s hp in the %s with %s%% hitchance, you hit their %s for %s hp with %s%% hitchance and backtracked %s ticks."
+                                printStr = string.format(printStr, entity.get_player_name(e.event.target), onionDamageLog.shotids[i].damage, string.lower(hitgroups[onionDamageLog.shotids[i].hitgroup + 1]), math.floor(onionDamageLog.shotids[i].hitchance),
+                                                                string.lower(hitgroups[e.event.hitgroup + 1]), e.event.damage, math.floor(e.event.hit_chance), onionDamageLog.shotids[i].backtrack)
 
-                            print(printStr) table.remove(onionDamageLog.shotids, i)
-                            return
+                                print(printStr) table.remove(onionDamageLog.shotids, i)
+                                return
+                            end
                         end
                     end
                 end
-            end
-        elseif (e.shot == 3) then -- Miss
-            if (onionDamageLog.shotids and #onionDamageLog.shotids > 0) then
-                for i = 1, #onionDamageLog.shotids do
-                    if (onionDamageLog.shotids[i].id == e.event.id) then
-                        if (e.event.target) then
-                            local printStr = "x You shot at %s for %s hp in the %s with %s%% hitchance and %s backtrack ticks, you missed them with %s%% hitchance due to %s."
-                            printStr = string.format(printStr, entity.get_player_name(e.event.target), onionDamageLog.shotids[i].damage, string.lower(hitgroups[onionDamageLog.shotids[i].hitgroup + 1]), math.floor(onionDamageLog.shotids[i].hitchance),
-                                                               onionDamageLog.shotids[i].backtrack, math.floor(e.event.hit_chance), e.event.reason)
+            elseif (e.shot == 3) then -- Miss
+                if (onionDamageLog.shotids and #onionDamageLog.shotids > 0) then
+                    for i = 1, #onionDamageLog.shotids do
+                        if (onionDamageLog.shotids[i].id == e.event.id) then
+                            if (e.event.target) then
+                                local printStr = "x You shot at %s for %s hp in the %s with %s%% hitchance and %s backtrack ticks, you missed them with %s%% hitchance due to %s."
+                                printStr = string.format(printStr, entity.get_player_name(e.event.target), onionDamageLog.shotids[i].damage, string.lower(hitgroups[onionDamageLog.shotids[i].hitgroup + 1]), math.floor(onionDamageLog.shotids[i].hitchance),
+                                                                onionDamageLog.shotids[i].backtrack, math.floor(e.event.hit_chance), e.event.reason)
 
-                            print(printStr) table.remove(onionDamageLog.shotids, i)
-                            return
+                                print(printStr) table.remove(onionDamageLog.shotids, i)
+                                return
+                            end
                         end
                     end
                 end
